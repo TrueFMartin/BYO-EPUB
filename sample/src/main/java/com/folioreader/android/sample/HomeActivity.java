@@ -71,7 +71,7 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
-        findViewById(R.id.btn_assest).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btn_assets).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -88,6 +88,25 @@ public class HomeActivity extends AppCompatActivity
                         .openBook("file:///android_asset/TheSilverChair.epub");
             }
         });
+
+        findViewById(R.id.btn_build_new).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                ReadLocator readLocator = getLastReadLocator();
+
+                Config config = AppUtil.getSavedConfig(getApplicationContext());
+                if (config == null)
+                    config = new Config();
+                config.setAllowedDirection(Config.AllowedDirection.VERTICAL_AND_HORIZONTAL);
+                config.setShowSearch(false);
+
+                folioReader.setReadLocator(readLocator);
+                folioReader.setConfig(config, true)
+                        .openBook("file:///android_asset/TheSilverChair.epub");
+            }
+        });
+
     }
 
     private ReadLocator getLastReadLocator() {

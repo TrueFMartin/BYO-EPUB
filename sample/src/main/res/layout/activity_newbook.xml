@@ -3,32 +3,41 @@
     android:layout_height="match_parent"
     android:layout_centerInParent="true">
 
-    <Button
-        android:id="@+id/btn_raw"
+    <EditText
+        android:id="@+id/et_enter_url"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
         android:layout_marginLeft="10dp"
-        android:layout_marginTop="20dp"
         android:layout_marginRight="10dp"
-        android:text="Open epub from raw" />
+        android:text="@string/string_enter_url"
+    />
+    <Button
+        android:id="@+id/empty1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/et_enter_url"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="something" />
 
     <Button
-        android:id="@+id/btn_assets"
+        android:id="@+id/empty2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btn_raw"
+        android:layout_below="@+id/empty1"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="20dp"
         android:layout_marginRight="10dp"
-        android:text="Open epub assets" />
+        android:text="something" />
 
     <Button
-        android:id="@+id/btn_build_new"
+        android:id="@+id/btn_submit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btn_assets"
+        android:layout_below="@+id/empty2"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="20dp"
         android:layout_marginRight="10dp"
-        android:text="Open epub assets" />
+        android:text="submit" />
 </RelativeLayout>

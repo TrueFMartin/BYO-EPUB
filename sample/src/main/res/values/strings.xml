@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FolioReader Sample</string>
+    <string name="string_enter_url">Enter URL of webnovel</string>
 </resources>
