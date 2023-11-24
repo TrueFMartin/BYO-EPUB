@@ -1,9 +1,11 @@
 package com.folioreader.builder.parsers;
+
+import com.folioreader.builder.Parser;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class WordpressBaseParser extends Parser {
 
@@ -37,6 +39,21 @@ public class WordpressBaseParser extends Parser {
 
     public Element findChapterTitle(Document dom) {
         return WordpressBaseParser.findChapterTitleElement(dom);
+    }
+
+    @Override
+    protected String extractTitleImpl(Document doc) {
+        return null;
+    }
+
+    @Override
+    protected String extractAuthor(Document doc) {
+        return null;
+    }
+
+    @Override
+    protected Elements getInformationEpubItemChildNodes(Document dom) {
+        return null;
     }
 
 }

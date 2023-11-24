@@ -62,6 +62,7 @@ class ParserState {
 public abstract class Parser {
     public static String WEB_TO_EPUB_CLASS_NAME = "webToEpubContent";
 
+    Util util = Util.getInstance();
     private ParserState state;
     private ImageCollector imageCollector;
 //    private UserPreferences userPreferences;
@@ -90,6 +91,17 @@ public abstract class Parser {
         this.userPreferences = userPreferences;
         this.imageCollector.onUserPreferencesUpdate(userPreferences);
     }
+
+    public void removeUnwantedElementsFromContentElement(Element element) {
+        util.removeScriptableElements(element);
+        util.removeComments(element);
+        util.removeElements(element.querySelectorAll("noscript, input"));
+        util.removeUnwantedWordpressElements(element);
+        util.removeMicrosoftWordCrapElements(element);
+        util.removeShareLinkElements(element);
+        util.removeLeadingWhiteSpace(element);
+    };
+
 
     public boolean isWebPagePackable(WebPage webPage) {
         return webPage.isIncludeable() && (webPage.getRawDom() != null || webPage.getError() != null);
