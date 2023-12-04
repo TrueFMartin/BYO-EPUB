@@ -1,27 +1,31 @@
 package com.folioreader.builder.parsers;
 
+import com.folioreader.builder.Chapter;
+import com.folioreader.builder.Parser;
+import com.folioreader.builder.Util;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 public class WuxiaworldWorldParser extends Parser {
 
-    static {
-        ParserFactory.register("wuxiaworld.world", WuxiaworldWorldParser::new);
-    }
+
 
     public WuxiaworldWorldParser() {
+        super();
+    }
+
+    public WuxiaworldWorldParser(Void unused) {
         super();
     }
 
     @Override
     public List<Chapter> getChapterUrls(Document doc) {
         Elements menu = doc.select("div.manga_chapter_list");
-        return Util.hyperlinksToChapterList(menu).stream()
-                .map(Chapter::reverse)
-                .collect(Collectors.toList());
+        return Util.hyperlinksToChapterList(menu.first());
     }
 
     @Override
@@ -38,7 +42,7 @@ public class WuxiaworldWorldParser extends Parser {
     @Override
     public String extractAuthor(Document doc) {
         Element authorLabel = doc.selectFirst("div.manga_des a");
-        return authorLabel != null ? authorLabel.text() : super.extractAuthor(doc);
+        return authorLabel.text();
     }
 
     @Override
@@ -47,7 +51,6 @@ public class WuxiaworldWorldParser extends Parser {
         return chapterTitle != null ? chapterTitle.text() : null;
     }
 
-    @Override
     public String findCoverImageUrl(Document doc) {
         return Util.getFirstImgSrc(doc, "div.manga_info_img");
     }

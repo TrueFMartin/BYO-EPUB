@@ -1,6 +1,15 @@
 package com.folioreader.builder;
 
 
+import com.folioreader.builder.parsers.RubymaybetranslationsParser;
+import com.folioreader.builder.parsers.VolarenovelsParser;
+import com.folioreader.builder.parsers.WanderinginnParser;
+import com.folioreader.builder.parsers.WordexcerptParser;
+import com.folioreader.builder.parsers.WuxiaworldParser;
+import com.folioreader.builder.parsers.WuxiaworldWorldParser;
+
+import org.jsoup.nodes.Document;
+
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,17 +17,27 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class ParserFactory {
-    private Map<String, Function<String, Parser>> parsers;
+    private Map<String, Function<Void, Parser>> parsers;
     private List<ParserRule> parserRules;
     private List<ParserUrlRule> parserUrlRules;
     private List<ManualSelection> manualSelection;
 
     public ParserFactory() {
-        this.parsers = new HashMap<>();
+        this.parsers = new HashMap<String, Function<Void, Parser>>();
         this.parserRules = new ArrayList<>();
         this.parserUrlRules = new ArrayList<>();
         this.manualSelection = new ArrayList<>();
-        this.registerManualSelect("", () -> null);
+        this.registerManualSelect("", (a) -> {
+            return null;
+        });
+        register("wuxiaworld.com", WuxiaworldParser::new);
+        register("wuxiaworld.world", WuxiaworldWorldParser::new);
+        register("thewanderinginn.com", WanderinginnParser::new);
+        register("wordexcerpt.com", WordexcerptParser::new);
+        register("volarenovels.com", VolarenovelsParser::new);
+        register("rubymaybetranslations.com", RubymaybetranslationsParser::new);
+
+
     }
 
     public static boolean isWebArchive(String url) {
@@ -41,7 +60,12 @@ public class ParserFactory {
         return hostName.startsWith("www.") ? hostName.substring(4) : hostName;
     }
 
-    public void register(String hostName, Function<String, Parser> constructor) {
+    public static Parser getParser(String url, Document dom) {
+        var s = stripWebArchive(stripLeadingWww(url));
+        return new WanderinginnParser();
+    }
+
+    public void register(String hostName, Function<Void, Parser> constructor) {
         String strippedHostName = ParserFactory.stripLeadingWww(hostName);
         if (!this.parsers.containsKey(strippedHostName)) {
             this.parsers.put(strippedHostName, constructor);
@@ -50,7 +74,7 @@ public class ParserFactory {
         }
     }
 
-    public void reregister(String hostName, Function<String, Parser> constructor) {
+    public void reregister(String hostName, Function<Void, Parser> constructor) {
         this.parsers.put(ParserFactory.stripLeadingWww(hostName), constructor);
     }
 

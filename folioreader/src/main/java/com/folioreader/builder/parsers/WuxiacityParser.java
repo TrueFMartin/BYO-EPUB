@@ -1,9 +1,14 @@
 package com.folioreader.builder.parsers;
 
+import com.folioreader.builder.Chapter;
+import com.folioreader.builder.Parser;
+import com.folioreader.builder.Util;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class WuxiacityParser extends Parser {
@@ -12,12 +17,7 @@ public class WuxiacityParser extends Parser {
         super();
     }
 
-    @Override
     public List<Chapter> getChapterUrls(Document doc) {
-        if (!doc.baseUri().endsWith("/table-of-contents")) {
-            // In Java, you need to handle fetching the table-of-contents page separately
-            // and then pass the new Document to this method
-        }
         Elements links = doc.select("ul.chapters a");
         return links.stream().map(WuxiacityParser::linkToChapter).collect(Collectors.toList());
     }
@@ -41,12 +41,16 @@ public class WuxiacityParser extends Parser {
     }
 
     @Override
+    public String extractAuthor(Document doc) {
+        return null;
+    }
+
+    @Override
     public String findChapterTitle(Document doc) {
         Element chapterTitle = doc.selectFirst(".chapter-title p");
         return chapterTitle != null ? chapterTitle.text() : null;
     }
 
-    @Override
     public String findCoverImageUrl(Document doc) {
         return Util.getFirstImgSrc(doc, "div.book-img");
     }

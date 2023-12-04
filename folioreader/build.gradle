@@ -123,6 +123,8 @@ dependencies {
 
     // XHTML Parsing
     implementation 'org.jsoup:jsoup:1.16.2'
-
+    implementation ('io.documentnode:epub4j-core:4.2.1') {
+        exclude group: 'xmlpull'
+    }
 }
 apply from: '../folioreader/bintray/bintrayv1.gradle'

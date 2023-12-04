@@ -23,6 +23,5 @@ public class ContentFetcher {
             this.url = url;
         }
 
-        // Getter methods for the fields
     }
 }

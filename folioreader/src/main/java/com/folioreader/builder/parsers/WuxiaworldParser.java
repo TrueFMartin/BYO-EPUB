@@ -1,36 +1,38 @@
 package com.folioreader.builder.parsers;
 
 
+import com.folioreader.builder.Chapter;
+import com.folioreader.builder.Parser;
+import com.folioreader.builder.Util;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.util.stream.Collectors;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class WuxiaworldParser extends Parser {
 
     static {
-        ParserFactory.register("wuxiaworld.com", WuxiaworldParser::new);
     }
 
     public WuxiaworldParser() {
         super();
     }
 
+    public WuxiaworldParser(Void unused) {
+        super();
+    }
+
+
     @Override
     public List<Chapter> getChapterUrls(Document doc) {
         Elements chaptersElement = doc.select("div.content div.panel-group");
         List<Chapter> chapters;
-        if (chaptersElement != null) {
-            chapters = Util.hyperlinksToChapterList(chaptersElement,
-                    WuxiaworldParser::isChapterHref, WuxiaworldParser::getChapterArc);
-            WuxiaworldParser.removeArcsWhenOnlyOne(chapters);
-        } else {
-            chapters = doc.select("li.chapter-item a").stream()
-                    .map(link -> Util.hyperLinkToChapter(link))
-                    .collect(Collectors.toList());
-        }
+        chapters = Util.hyperlinksToChapterList(chaptersElement.first());
+        WuxiaworldParser.removeArcsWhenOnlyOne(chapters);
         return chapters;
     }
 
@@ -46,9 +48,9 @@ public class WuxiaworldParser extends Parser {
     }
 
     private static void removeArcsWhenOnlyOne(List<Chapter> chapters) {
-        long arcCount = chapters.stream().filter(c -> c.getNewArc() != null).count();
+        long arcCount = chapters.stream().filter(c -> !c.getNewArc().isEmpty()).count();
         if (arcCount < 2) {
-            chapters.forEach(c -> c.setNewArc(null));
+            chapters.forEach(chapter -> chapter.setNewArc("New Arc"));
         }
     }
 
@@ -82,6 +84,15 @@ public class WuxiaworldParser extends Parser {
     }
 
     @Override
+    public String extractTitleImpl(Document doc) {
+        return null;
+    }
+
+    @Override
+    public String extractAuthor(Document doc) {
+        return null;
+    }
+
     public String findCoverImageUrl(Document doc) {
         return Util.getFirstImgSrc(doc, "div.novel-index");
     }

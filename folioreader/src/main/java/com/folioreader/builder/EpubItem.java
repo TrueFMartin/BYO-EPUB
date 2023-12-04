@@ -1,7 +1,7 @@
 package com.folioreader.builder;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +28,10 @@ public abstract class EpubItem {
     public abstract boolean hasSvg();
     public abstract String fileContentForEpub();
     public abstract List<ChapterInfo> chapterInfo(); // Assuming ChapterInfo is a class representing chapter information
+
+    public org.jsoup.nodes.Element[] getHyperlinks() {
+        return new org.jsoup.nodes.Element[0];
+    }
 }
 
 class ChapterEpubItem extends EpubItem {

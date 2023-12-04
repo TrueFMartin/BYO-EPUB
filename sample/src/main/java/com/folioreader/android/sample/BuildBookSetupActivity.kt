@@ -19,6 +19,6 @@ class BuildBookSetupActivity: AppCompatActivity() {
 
     private fun submitCallback() {
         val url = etEnterURL.text
-        val intent = Intent(this, )
+//        val intent = Intent(this, )
     }
 }

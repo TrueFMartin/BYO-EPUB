@@ -3,21 +3,19 @@ package com.folioreader.builder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 class ParserState {
-    private Map<String, WebPage> webPages;
+    private Map<String, Document> webPages;
     private String chapterListUrl;
 
     public ParserState() {
@@ -25,25 +23,24 @@ class ParserState {
         this.chapterListUrl = null;
     }
 
-    public void setPagesToFetch(List<WebPage> urls) {
+    public void setPagesToFetch(List<Document> urls) {
         Set<String> nextPrevChapters = new HashSet<>();
         this.webPages = new HashMap<>();
 
         for (int i = 0; i < urls.size(); ++i) {
-            WebPage page = urls.get(i);
+            Document page = urls.get(i);
             if (i < urls.size() - 1) {
-                nextPrevChapters.add(Util.normalizeUrlForCompare(urls.get(i + 1).getSourceUrl()));
+                nextPrevChapters.add(Util.normalizeUrlForCompare(urls.get(i + 1).baseUri()));
             }
-            page.setNextPrevChapters(new HashSet<>(nextPrevChapters));
-            this.webPages.put(page.getSourceUrl(), page);
+            this.webPages.put(page.baseUri(), page);
 
             nextPrevChapters.clear();
-            nextPrevChapters.add(Util.normalizeUrlForCompare(page.getSourceUrl()));
+            nextPrevChapters.add(Util.normalizeUrlForCompare(page.baseUri()));
         }
     }
 
     // Getters and setters for webPages and chapterListUrl
-    public Map<String, WebPage> getWebPages() {
+    public Map<String, Document> getDocuments() {
         return webPages;
     }
 
@@ -56,7 +53,7 @@ class ParserState {
     }
 }
 
-// The WebPage class is assumed to have methods like getSourceUrl() and setNextPrevChapters().
+// The Document class is assumed to have methods like getSourceUrl() and setNextPrevChapters().
 // The Util class is assumed to have a method normalizeUrlForCompare().
 
 public abstract class Parser {
@@ -65,12 +62,16 @@ public abstract class Parser {
     Util util = Util.getInstance();
     private ParserState state;
     private ImageCollector imageCollector;
+    private UserPreferences userPreferences;
 //    private UserPreferences userPreferences;
 
     public Parser(ImageCollector imageCollector) {
         this.state = new ParserState();
         this.imageCollector = imageCollector != null ? imageCollector : new ImageCollector();
 //        this.userPreferences = null;
+    }
+    public Parser() {
+        this.state = new ParserState();
     }
 
     public void copyState(Parser otherParser) {
@@ -79,41 +80,31 @@ public abstract class Parser {
         this.userPreferences = otherParser.userPreferences;
     }
 
-    public void setPagesToFetch(List<String> urls) {
+    public void setPagesToFetch(List<Document> urls) {
         this.state.setPagesToFetch(urls);
     }
 
-    public List<WebPage> getPagesToFetch() {
-        return this.state.getWebPages();
+    public Map<String, Document> getPagesToFetch() {
+        return this.state.getDocuments();
     }
 
     public void onUserPreferencesUpdate(UserPreferences userPreferences) {
         this.userPreferences = userPreferences;
         this.imageCollector.onUserPreferencesUpdate(userPreferences);
     }
-
+    public List<Chapter> getChapterUrls(Document doc) {
+        return Util.hyperlinksToChapterList(doc.select("a").first());
+    }
     public void removeUnwantedElementsFromContentElement(Element element) {
-        util.removeScriptableElements(element);
-        util.removeComments(element);
-        util.removeElements(element.querySelectorAll("noscript, input"));
-        util.removeUnwantedWordpressElements(element);
-        util.removeMicrosoftWordCrapElements(element);
-        util.removeShareLinkElements(element);
-        util.removeLeadingWhiteSpace(element);
+        Util.removeScriptableElements(element);
+        Util.removeComments(element);
+        Util.removeElements(element.select("noscript, input"));
+        Util.removeUnwantedWordpressElements(element);
+        Util.removeMicrosoftWordCrapElements(element);
+        Util.removeShareLinkElements(element);
+        Util.removeLeadingWhiteSpace(element);
     };
 
-
-    public boolean isWebPagePackable(WebPage webPage) {
-        return webPage.isIncludeable() && (webPage.getRawDom() != null || webPage.getError() != null);
-    }
-
-    public Element convertRawDomToContent(WebPage webPage) {
-        Element content = this.findContent(webPage.getRawDom());
-        // Additional custom and utility method calls to be implemented here
-
-        // Return the transformed content
-        return content;
-    }
 
     // Additional methods to be implemented
 
@@ -124,10 +115,10 @@ public abstract class Parser {
     // Continued from the previous conversion
 
     // Additional methods in Parser class
-    public void addTitleToContent(WebPage webPage, Element content) {
-        String title = findChapterTitle(webPage.getRawDom());
+    public void addTitleToContent(Document webPage, Element content) {
+        String title = findChapterTitle(webPage);
         if (title != null && !titleAlreadyPresent(title, content)) {
-            Element titleElement = webPage.getRawDom().createElement("h1");
+            Element titleElement = webPage.createElement("h1");
             titleElement.text(title.trim());
             content.prependChild(titleElement);
         }
@@ -139,8 +130,8 @@ public abstract class Parser {
     }
 
     // Additional abstract methods for subclasses to implement
-    protected abstract String extractTitleImpl(Document doc);
-    protected abstract String extractAuthor(Document doc);
+    public abstract String extractTitleImpl(Document doc);
+    public abstract String extractAuthor(Document doc);
 
     public String extractTitle(Document doc) {
         String title = extractTitleImpl(doc);
@@ -155,16 +146,6 @@ public abstract class Parser {
         return titleElement != null ? titleElement.attr("content") : doc.title();
     }
 
-// Continued from the previous conversion
-
-    public String extractLanguage(Document doc) {
-        Element locale = doc.selectFirst("meta[property='og:locale']");
-        if (locale != null) {
-            return locale.attr("content");
-        }
-        locale = doc.selectFirst("html").attr("lang");
-        return locale != null ? locale : "en";
-    }
 
     public String extractSubject(Document doc) {
         // Default implementation. Override in subclass if needed.
@@ -182,14 +163,9 @@ public abstract class Parser {
 
     public EpubMetaInfo getEpubMetaInfo(Document dom, boolean useFullTitle) {
         EpubMetaInfo metaInfo = new EpubMetaInfo();
-        metaInfo.setUuid(dom.baseUri());
-        metaInfo.setTitle(extractTitle(dom));
-        metaInfo.setAuthor(extractAuthor(dom).trim());
-        metaInfo.setLanguage(extractLanguage(dom));
-        metaInfo.setFileName(makeSaveAsFileNameWithoutExtension(metaInfo.getTitle(), useFullTitle));
-        metaInfo.setSubject(extractSubject(dom));
-        metaInfo.setDescription(extractDescription(dom));
-        extractSeriesInfo(dom, metaInfo);
+//        metaInfo.setUuid(dom.baseUri());
+//        metaInfo.setTitle(extractTitle(dom));
+//        metaInfo.setAuthor(extractAuthor(dom).trim());
         return metaInfo;
     }
 
@@ -215,11 +191,8 @@ public abstract class Parser {
         return baseElement != null ? baseElement.attr("href") : null;
     }
 
-    public void onStartCollecting() {
-        // This method can be overridden in derived classes if needed
-    }
 
-    protected void fixupHyperlinksInEpubItems(List<EpubItem> epubItems) {
+     public void fixupHyperlinksInEpubItems(List<EpubItem> epubItems) {
         Map<String, String> targets = sourceUrlToEpubItemUrl(epubItems);
         for (EpubItem item : epubItems) {
             for (Element link : item.getHyperlinks()) {
@@ -235,7 +208,7 @@ public abstract class Parser {
     private Map<String, String> sourceUrlToEpubItemUrl(List<EpubItem> epubItems) {
         Map<String, String> targets = new HashMap<>();
         for (EpubItem item : epubItems) {
-            String key = Util.normalizeUrlForCompare(item.getSourceUrl());
+            String key = Util.normalizeUrlForCompare(item.sourceUrl);
             if (!targets.containsKey(key)) {
                 targets.put(key, Util.makeRelative(item.getZipHref()));
             }
@@ -269,14 +242,6 @@ public abstract class Parser {
         }
     }
 
-    public void tagAuthorNotesBySelector(Element element, String selector) {
-        Elements notes = element.select(selector);
-        if (this.userPreferences.removeAuthorNotes()) {
-            Util.removeElements(notes);
-        } else {
-            tagAuthorNotes(notes);
-        }
-    }
 
     // Helper method for creating an empty document for content
     public static Document makeEmptyDocForContent(String baseUrl) {
@@ -291,20 +256,6 @@ public abstract class Parser {
         return doc.selectFirst("div." + Parser.WEB_TO_EPUB_CLASS_NAME);
     }
 
-    // Methods for walking through Table of Contents (ToC) pages and fetching chapters
-    public List<Chapter> getChaptersFromAllTocPages(Document dom, Function<Document, List<Chapter>> extractPartialChapterList,
-                                                    Supplier<List<String>> getUrlsOfTocPages,
-                                                    ChapterUrlsUI chapterUrlsUI) throws Exception {
-        List<Chapter> chapters = new ArrayList<>();
-        chapters.addAll(extractPartialChapterList.apply(dom));
-        for (String url : getUrlsOfTocPages.get()) {
-            Document newDom = Jsoup.connect(url).get(); // Fetch the document
-            chapters.addAll(extractPartialChapterList.apply(newDom));
-        }
-        return chapters;
-    }
-
-// Continued from the previous conversion
 
     public void moveFootnotes(Document dom, Element content, List<Element> footnotes) {
         if (!footnotes.isEmpty()) {
@@ -341,20 +292,9 @@ public abstract class Parser {
 
     private long determineRateLimitDelay() {
         // Logic to determine delay based on user preferences or other factors
-        return userPreferences.getManualDelayPerChapter();
+        return userPreferences.delay;
     }
 
-    public List<Chapter> getChaptersFromAllTocPages(Document dom, Function<Document, List<Chapter>> extractPartialChapterList,
-                                                    Supplier<List<String>> getUrlsOfTocPages,
-                                                    ChapterUrlsUI chapterUrlsUI) throws Exception {
-        List<Chapter> chapters = extractPartialChapterList.apply(dom);
-        for (String url : getUrlsOfTocPages.get()) {
-            rateLimitDelay();
-            Document newDom = Jsoup.connect(url).get();
-            chapters.addAll(extractPartialChapterList.apply(newDom));
-        }
-        return chapters;
-    }
 
     // Methods to walk through ToC pages and fetch chapters
     public List<Chapter> walkTocPages(Document dom, Function<Document, List<Chapter>> chaptersFromDom,
@@ -393,17 +333,17 @@ public abstract class Parser {
         // Implementation depends on your application's reading list management.
     }
 
-    public void updateLoadState(WebPage webPage) {
+    public void updateLoadState(Document webPage) {
         // Update load state of the web page.
         // Implementation depends on your application's UI and progress tracking.
     }
 
-    public void fetchImagesUsedInDocument(Element content, WebPage webPage) throws IOException {
+    public void fetchImagesUsedInDocument(Element content, Document webPage) throws IOException {
         // Implementation for fetching and handling images within the document.
         // This would typically involve imageCollector and other utility methods.
     }
 
-    public List<EpubItem> webPagesToEpubItems(List<WebPage> webPages) {
+    public List<EpubItem> webPagesToEpubItems(List<Document> webPages) {
         List<EpubItem> epubItems = new ArrayList<>();
         // Convert each web page to Epub items.
         // Implementation depends on EpubItem creation and handling.
@@ -434,11 +374,11 @@ public abstract class Parser {
         Util.removeChildElementsMatchingCss(infoDiv, "img"); // Remove images as they won't be collected
     }
 
-    protected void cleanInformationNode(Element node) {
+    public void cleanInformationNode(Element node) {
         // Default implementation; override in derived classes as required.
     }
 
-    protected abstract Elements getInformationEpubItemChildNodes(Document dom);
+    public abstract Elements getInformationEpubItemChildNodes(Document dom);
 
     public void fetchContent() {
         // Implementation for fetching content.
@@ -450,7 +390,7 @@ public abstract class Parser {
         // Implementation depends on your application's UI logic.
     }
 
-    public List<EpubItem> fetchWebPages() throws IOException {
+    public List<EpubItem> fetchDocuments() throws IOException {
         // Fetches web pages and converts them to Epub items.
         // Implement the logic for fetching and handling web pages.
         return new ArrayList<>();
@@ -462,27 +402,15 @@ public abstract class Parser {
     }
 // Continued from the previous conversion
 
-    public List<EpubItem> groupPagesToFetch(List<WebPage> webPages, int index) {
-        int blockSize = Math.min(userPreferences.getMaxPagesToFetchSimultaneously(), clampSimultanousFetchSize());
+    public List<Document> groupPagesToFetch(List<Document> webPages, int index) {
+        int blockSize = Math.min(userPreferences.synchronousLimit, clampSimultanousFetchSize());
         return webPages.subList(index, Math.min(index + blockSize, webPages.size()));
     }
 
     public int clampSimultanousFetchSize() {
         // Adjust the simultaneous fetch size if needed, based on specific site capabilities
-        return userPreferences.getMaxPagesToFetchSimultaneously();
+        return userPreferences.synchronousLimit;
     }
-
-    public void tagAuthorNotes(Elements elements) {
-        if (userPreferences.shouldRemoveAuthorNotes()) {
-            Util.removeElements(elements);
-        } else {
-            for (Element e : elements) {
-                e.addClass("webToEpub-author-note");
-            }
-        }
-    }
-
-
 
 
 }

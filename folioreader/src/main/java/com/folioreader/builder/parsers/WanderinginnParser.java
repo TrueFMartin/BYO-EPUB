@@ -1,10 +1,11 @@
 package com.folioreader.builder.parsers;
 
+import com.folioreader.builder.Chapter;
+import com.folioreader.builder.Util;
+
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class WanderinginnParser extends WordpressBaseParser {
 
@@ -12,11 +13,13 @@ public class WanderinginnParser extends WordpressBaseParser {
         super();
     }
 
-    public List<String> getChapterUrls(Document dom) {
+    public WanderinginnParser(Void unused) {
+        super();
+    }
+
+    public List<Chapter> getChapterUrls(Document dom) {
         Elements chapterLinks = dom.select("#table-of-contents a:not(.book-title-num)");
-        return chapterLinks.stream()
-                .map(Element::absUrl)
-                .collect(Collectors.toList());
+        return Util.hyperlinksToChapterList(chapterLinks.first());
     }
 
     public String extractTitleImpl() {

@@ -1,9 +1,12 @@
 package com.folioreader.builder.parsers;
 
+import com.folioreader.builder.Chapter;
 import com.folioreader.builder.Parser;
+import com.folioreader.builder.Util;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.util.List;
 
@@ -13,7 +16,7 @@ public class WordpressBaseParser extends Parser {
         super();
     }
 
-    public List<String> getChapterUrls(Document dom) {
+    public List<Chapter> getChapterUrls(Document dom) {
         Element content = findContent(dom).clone();
         removeUnwantedElementsFromContentElement(content);
         return Util.hyperlinksToChapterList(content);
@@ -37,22 +40,22 @@ public class WordpressBaseParser extends Parser {
         return dom.select(".entry-title, .page-title, header.post-title h1, .post-title, #chapter-heading").first();
     }
 
-    public Element findChapterTitle(Document dom) {
-        return WordpressBaseParser.findChapterTitleElement(dom);
+    public String findChapterTitle(Document dom) {
+        return WordpressBaseParser.findChapterTitleElement(dom).text();
     }
 
     @Override
-    protected String extractTitleImpl(Document doc) {
+    public String extractTitleImpl(Document doc) {
         return null;
     }
 
     @Override
-    protected String extractAuthor(Document doc) {
+    public String extractAuthor(Document doc) {
         return null;
     }
 
     @Override
-    protected Elements getInformationEpubItemChildNodes(Document dom) {
+    public Elements getInformationEpubItemChildNodes(Document dom) {
         return null;
     }
 

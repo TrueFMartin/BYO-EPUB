@@ -1,6 +1,7 @@
 package com.folioreader.builder;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,17 +11,37 @@ import org.jsoup.select.Elements;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 public class Util {
 
     private static Util instance;
     private static final String[] HEADER_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"};
+
+    String XMLNS = "http://www.w3.org/1999/xhtml";
+
+    // ugly, but we're treating <u> and <s> as inline (they are not)
+    static String[] inlineElements = new String[]{"b","big","i","small","tt","abbr","acronym","cite",
+            "code","dfn","em","kbd","strong","samp","time","var", "a","bdo",
+            "br","img","map","object","q","script","span","sub","sup",
+            "button","input","label","select","textarea","u","s"};
+    static HashSet<String> INLINE_ELEMENTS = new HashSet<>(Arrays.asList(inlineElements));
+
+    static String[] blockElements = new String[]{"address","article","aside","blockquote","canvas",
+            "dd","div","dl","fieldset","figcaption","figure","footer",
+            "form","h1","h2","h3","h4","h5","h6","header","hgroup","hr",
+            "li","main","nav","noscript","ol","output","p","pre",
+            "section","table","tfoot","ul","video"};
+    static HashSet<String> BLOCK_ELEMENTS = new HashSet<>(Arrays.asList(blockElements));
 
     private Util() {
     }
@@ -32,13 +53,7 @@ public class Util {
         return instance;
     }
 
-    public static void removeElements(Elements elements) {
-        for (Element element : elements) {
-            element.remove();
-        }
-    }
-
-    public Document createEmptyXhtmlDoc() {
+    public static Document createEmptyXhtmlDoc() {
         Document doc = Jsoup.parse("<!DOCTYPE html><html></html>", "", org.jsoup.parser.Parser.xmlParser());
         doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
         Element htmlNode = doc.selectFirst("html");
@@ -59,9 +74,15 @@ public class Util {
      * @return A new HTML document.
      */
     public static Document createEmptyHtmlDoc() {
-        Document doc = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder()
-                .newDocument();
+        Document doc;
+        try {
+            var docW3 = DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .newDocument();
+            doc = new Document(docW3.getBaseURI());
+        } catch (ParserConfigurationException e) {
+            throw new RuntimeException(e);
+        }
         Element html = doc.createElement("html");
         doc.appendChild(html);
         Element head = doc.createElement("head");
@@ -81,9 +102,9 @@ public class Util {
     private static void populateHead(Document doc, Element head) {
         Element style = doc.createElement("link");
         head.appendChild(style);
-        style.setAttribute("href", makeRelative(styleSheetFileName()));
-        style.setAttribute("type", "text/css");
-        style.setAttribute("rel", "stylesheet");
+        style.attr("href", makeRelative(styleSheetFileName()));
+        style.attr("type", "text/css");
+        style.attr("rel", "stylesheet");
     }
 
     /**
@@ -100,44 +121,36 @@ public class Util {
         Document doc = createEmptyXhtmlDoc();
         Element body = (Element) doc.select("body").get(0);
         Element div = doc.createElement("div");
-        div.setAttribute("class", "svg_outer svg_inner");
+        div.attr("class", "svg_outer svg_inner");
         body.appendChild(div);
         Element svg = doc.createElement("svg");
-        svg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+        svg.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
         div.appendChild(svg);
-        svg.setAttribute("height", "99%");
-        svg.setAttribute("width", "100%");
-        svg.setAttribute("version", "1.1");
-        svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-        svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+        svg.attr("height", "99%");
+        svg.attr("width", "100%");
+        svg.attr("version", "1.1");
+        svg.attr("preserveAspectRatio", "xMidYMid meet");
+        svg.attr("viewBox", "0 0 " + width + " " + height);
         Element newImage = doc.createElement("image");
         svg.appendChild(newImage);
-        newImage.setAttribute("xlink:href", makeRelative(href));
-        newImage.setAttribute("width", String.valueOf(width));
-        newImage.setAttribute("height", String.valueOf(height));
+        newImage.attr("xlink:href", makeRelative(href));
+        newImage.attr("width", String.valueOf(width));
+        newImage.attr("height", String.valueOf(height));
         if (includeImageSourceUrl) {
             Element desc = doc.createElement("desc");
             svg.appendChild(desc);
-            desc.appendChild(doc.createTextNode(origin));
+            desc.appendChild(new TextNode(origin));
         } else {
             svg.appendChild(createComment(doc, origin));
         }
         return div;
     }
 
-    /**
-     * Create a comment node.
-     *
-     * @param doc     The document to create the comment in.
-     * @param content The content of the comment.
-     * @return A new comment node.
-     */
-    public static Comment createComment(Document doc, String content) {
-        return doc.createComment("  " + content.replace("--", "%2D%2D") + "  ");
-    }
 
     // Assuming makeRelative and styleSheetFileName methods are already defined
-
+    public static String makeRelative(String href) {
+        return ".." + href.substring(5);
+    }
     /**
      * Resolve a relative URL based on a base URL.
      *
@@ -213,7 +226,7 @@ public class Util {
             for (String pair : pairs) {
                 int idx = pair.indexOf("=");
                 if (pair.substring(0, idx).equals(paramName)) {
-                    return URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8.toString());
+                    return URLDecoder.decode(pair.substring(idx + 1));
                 }
             }
         } catch (Exception e) {
@@ -222,22 +235,6 @@ public class Util {
         return null;
     }
 
-    /**
-     * Set the base tag of a DOM to a specified URL.
-     *
-     * @param url The URL to set as the base.
-     * @param dom The DOM to modify.
-     */
-    public static void setBaseTag(String url, Document dom) {
-        Elements tags = dom.select("base");
-        if (tags.size() > 0) {
-            ((Element) tags.get(0)).setAttribute("href", url);
-        } else {
-            Element baseTag = dom.createElement("base");
-            baseTag.setAttribute("href", url);
-            dom.select("head").get(0).appendChild(baseTag);
-        }
-    }
 
     /**
      * Decode Cloudflare protected emails.
@@ -245,11 +242,11 @@ public class Util {
      * @param content The element containing encoded emails.
      */
     public static void decodeCloudflareProtectedEmails(Element content) {
-        Elements links = content.querySelectorAll(".__cf_email__");
+        Elements links = content.select(".__cf_email__");
         for (int i = 0; i < links.size(); i++) {
             replaceCloudflareProtectedLink((Element) links.get(i));
         }
-        links = content.querySelectorAll("a[href*='/cdn-cgi/l/email-protection']");
+        links = content.select("a[href*='/cdn-cgi/l/email-protection']");
         for (int i = 0; i < links.size(); i++) {
             replaceCloudflareProtectedLink((Element) links.get(i));
         }
@@ -262,18 +259,17 @@ public class Util {
      */
     private static void replaceCloudflareProtectedLink(Element link) {
         String cyptedEmail = link.attr("data-cfemail");
-        if (cyptedEmail == null) {
+        if (cyptedEmail.isEmpty()) {
             cyptedEmail = link.attr("href");
-            if (cyptedEmail != null && !cyptedEmail.isEmpty()) {
+            if (!cyptedEmail.isEmpty()) {
                 cyptedEmail = cyptedEmail.substring(1);
             }
         }
-        if (cyptedEmail != null) {
-            String decryptedEmail = decodeEmail(cyptedEmail);
-            Text textNode = link.getOwnerDocument().createTextNode(decryptedEmail);
-            link.parent().insertBefore(textNode, link);
-            link.parent().removeChild(link);
-        }
+        if(cyptedEmail.isEmpty())
+            return;
+        String decryptedEmail = decodeEmail(cyptedEmail);
+        TextNode textNode = new TextNode(decryptedEmail);
+        link.replaceWith(textNode);
     }
 
     /**
@@ -297,9 +293,7 @@ public class Util {
      * @param elements The Elements of elements to remove.
      */
     public static void removeElements(Elements elements) {
-        for (int i = 0; i < elements.size(); i++) {
-            elements.get(i).parent().removeChild(elements.get(i));
-        }
+        elements.remove();
     }
 
     /**
@@ -310,59 +304,11 @@ public class Util {
      */
     public static void removeChildElementsMatchingCss(Element element, String css) {
         if (element != null) {
-            Elements elementsToRemove = element.querySelectorAll(css);
+            Elements elementsToRemove = element.select(css);
             removeElements(elementsToRemove);
         }
     }
 
-    /**
-     * Remove comments from a root element.
-     *
-     * @param root The root element to start removing comments from.
-     */
-    public static void removeComments(Node root) {
-        NodeFilter filter = (node) -> node.getNodeType() == Node.COMMENT_NODE ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-        NodeIterator iterator = ((Document) root).createNodeIterator(root, NodeFilter.SHOW_COMMENT, filter, false);
-        Node node;
-        while ((node = iterator.nextNode()) != null) {
-            node.parent().removeChild(node);
-        }
-    }
-
-
-    /**
-     * Remove trailing white spaces from an element.
-     *
-     * @param element The element to remove trailing white spaces from.
-     */
-    public static void removeTrailingWhiteSpace(Node element) {
-        Elements children = element.getChildNodes();
-        for (int i = children.size() - 1; i >= 0; i--) {
-            Node child = children.get(i);
-            if (isElementWhiteSpace(child)) {
-                element.removeChild(child);
-            } else {
-                break;
-            }
-        }
-    }
-
-    /**
-     * Remove leading white spaces from an element.
-     *
-     * @param element The element to remove leading white spaces from.
-     */
-    public static void removeLeadingWhiteSpace(Node element) {
-        Elements children = element.getChildNodes();
-        for (int i = 0; i < children.size(); i++) {
-            Node child = children.get(i);
-            if (isElementWhiteSpace(child)) {
-                element.removeChild(child);
-            } else {
-                break;
-            }
-        }
-    }
 
     /**
      * Remove elements with scriptable content from an element.
@@ -381,8 +327,8 @@ public class Util {
      */
     public static void removeMicrosoftWordCrapElements(Element element) {
         Elements nodes = element.select("O:P");
-        for (int i = 0; i < nodes.size(); i++) {
-            flattenNode((Element) nodes.get(i));
+        for (Element node : nodes) {
+            flattenNode((Element) node);
         }
     }
 
@@ -393,10 +339,10 @@ public class Util {
      */
     private static void flattenNode(Node node) {
         Node parent = node.parent();
-        while (node.hasChildNodes()) {
-            parent.insertBefore(node.getFirstChild(), node);
+        while (node.childNodeSize() != 0) {
+            parent.before(node.lastChild());
         }
-        parent.removeChild(node);
+        node.remove();
     }
 
     /**
@@ -405,34 +351,9 @@ public class Util {
      * @param contentElement The element to remove event handlers from.
      */
     private static void removeEventHandlers(Element contentElement) {
-        Document document = contentElement.getOwnerDocument();
-        NodeIterator iterator = document.createNodeIterator(contentElement, NodeFilter.SHOW_ELEMENT, null, false);
-        Node node;
-        while ((node = iterator.nextNode()) != null) {
-            if (node instanceof Element) {
-                ((Element) node).removeAttribute("onclick");
-            }
-        }
+        contentElement.removeAttr("oneclick");
     }
 
-    /**
-     * Remove height and width styles from an element and its parents.
-     *
-     * @param element The element to remove height and width styles from.
-     */
-    public static void removeHeightAndWidthStyleFromParents(Element element) {
-        Node parent = element.parent();
-        while (parent != null && !"body".equalsIgnoreCase(parent.nodeName())) {
-            removeHeightAndWidthStyle((Element) parent);
-            parent = parent.parent();
-        }
-    }
-
-
-    public static String getFirstImgSrc(Document doc, String selector) {
-        Element img = doc.select(selector + " img").first();
-        return img != null ? img.attr("src") : null;
-    }
 
     public static void setBaseTag(String url, Document doc) {
         Element baseTag = doc.select("base").first();
@@ -445,15 +366,6 @@ public class Util {
         }
     }
 
-    public static void resolveLazyLoadedImages(Element content, String imgCss) {
-        Elements images = content.select(imgCss);
-        for (Element img : images) {
-            String dataSrc = img.attr("data-src");
-            if (!dataSrc.isEmpty()) {
-                img.attr("src", dataSrc.trim());
-            }
-        }
-    }
 
     public static String convertHtmlToXhtml(String html) {
         Document document = Jsoup.parse(html);
@@ -465,7 +377,8 @@ public class Util {
 
 
     public static void removeComments(Element root) {
-        root.childNodes().removeIf(node -> node.nodeName().equals("#comment"));
+        root.childNodes().stream().filter(n -> "#comment".equals(n.nodeName())|| n instanceof Comment).forEach(Node::remove);
+
     }
 
 
@@ -493,31 +406,19 @@ public class Util {
         }
     }
 
-    public static void removeScriptableElements(Element element) {
-        removeChildElementsMatchingCss(element, "script, iframe");
-        removeEventHandlers(element);
-    }
-
-    public static void removeMicrosoftWordCrapElements(Element element) {
-        Elements wordElements = element.select("O\\:P");
-        for (Element wordElement : wordElements) {
-            flattenNode(wordElement);
-        }
-    }
-
     public static void flattenNode(Element node) {
         while (!node.childNodes().isEmpty()) {
             node.before(node.childNode(0));
         }
         node.remove();
     }
-
-    public static void removeEventHandlers(Element element) {
-        Elements elementsWithEvents = element.select("*[onclick]");
-        for (Element el : elementsWithEvents) {
-            el.removeAttr("onclick");
-        }
-    }
+//
+//    public static void removeEventHandlers(Element element) {
+//        Elements elementsWithEvents = element.select("*[onclick]");
+//        for (Element el : elementsWithEvents) {
+//            el.removeAttr("onclick");
+//        }
+//    }
 
     public static void removeHeightAndWidthStyleFromParents(Element element) {
         Element parent = element.parent();
@@ -544,26 +445,7 @@ public class Util {
         removeChildElementsMatchingCss(element, "div.sharepost");
     }
 
-    /**
-     * Remove a specific style value from an element and its descendants.
-     *
-     * @param element   The root element.
-     * @param styleName The name of the style to remove.
-     * @param value     The value of the style to remove.
-     */
-    public static void removeStyleValue(Element element, String styleName, String value) {
-        if (value != null) {
-            element.traverse((node, x) -> {
-                if (node instanceof Element) {
-                    Element el = (Element) node;
-                    String styleValue = el.attr("style");
-                    if (styleValue.contains(styleName + ": " + value)) {
-                        el.removeAttr("style");
-                    }
-                }
-            });
-        }
-    }
+
     /**
      * Convert <pre> tags to <p> tags with specified split character.
      *
@@ -572,7 +454,7 @@ public class Util {
      * @param splitOn  The character to split the text on.
      */
     public static void convertPreTagToPTags(Document dom, Element element, String splitOn) {
-        String[] lines = element.getTextContent().split(splitOn != null ? splitOn : "\n");
+        String[] lines = element.text().split(splitOn != null ? splitOn : "\n");
         element.text("");
         for (String line : lines) {
             Element p = dom.createElement("p");
@@ -601,8 +483,8 @@ public class Util {
         Elements centers = element.select("center");
         for (int i = 0; i < centers.size(); i++) {
             Element center = (Element) centers.get(i);
-            Element replacement = center.getOwnerDocument().createElement("p");
-            replacement.setAttribute("style", "text-align: center;");
+            Element replacement = center.ownerDocument().createElement("p");
+            replacement.attr("style", "text-align: center;");
             convertElement(center, replacement);
         }
     }
@@ -616,8 +498,8 @@ public class Util {
         Elements underscores = element.select("u");
         for (int i = 0; i < underscores.size(); i++) {
             Element underscore = (Element) underscores.get(i);
-            Element replacement = underscore.getOwnerDocument().createElement("span");
-            replacement.setAttribute("style", "text-decoration: underline;");
+            Element replacement = underscore.ownerDocument().createElement("span");
+            replacement.attr("style", "text-decoration: underline;");
             convertElement(underscore, replacement);
         }
     }
@@ -630,9 +512,9 @@ public class Util {
     public static void replaceSTags(Element element) {
         Elements strikethroughs = element.select("s");
         for (int i = 0; i < strikethroughs.size(); i++) {
-            Element strikethrough = (Element) strikethroughs.get(i);
-            Element replacement = strikethrough.getOwnerDocument().createElement("span");
-            replacement.setAttribute("style", "text-decoration: line-through;");
+            Element strikethrough = strikethroughs.get(i);
+            Element replacement = strikethrough.ownerDocument().createElement("span");
+            replacement.attr("style", "text-decoration: line-through;");
             convertElement(strikethrough, replacement);
         }
     }
@@ -644,11 +526,12 @@ public class Util {
      * @param replacement The new element to replace the old one.
      */
     public static void convertElement(Element element, Element replacement) {
-        Node parent = element.parent();
-        parent.insertBefore(replacement, element);
-        moveChildElements(element, replacement);
-        copyAttributes(element, replacement);
-        parent.removeChild(element);
+        element.replaceWith(replacement);
+//        Node parent = element.parent();
+//        parent.(replacement, element);
+//        moveChildElements(element, replacement);
+//        copyAttributes(element, replacement);
+//        parent.removeChild(element);
     }
 
     /**
@@ -658,8 +541,8 @@ public class Util {
      * @param to   The element to which to move children.
      */
     public static void moveChildElements(Element from, Element to) {
-        while (from.hasChildNodes()) {
-            to.appendChild(from.getFirstChild());
+        while (from.childrenSize() != 0) {
+            to.appendChild(from.firstElementChild());
         }
     }
 
@@ -670,10 +553,9 @@ public class Util {
      * @param to   The destination element.
      */
     public static void copyAttributes(Element from, Element to) {
-        NamedNodeMap attributes = from.attrs();
-        for (int i = 0; i < attributes.size(); i++) {
-            Node attr = attributes.get(i);
-            to.setAttribute(attr.nodeName(), attr.getNodeValue());
+        var attributes = from.attributes();
+        for (Attribute attr : attributes) {
+            to.attr(attr.getKey(), attr.getValue());
         }
     }
 
@@ -689,27 +571,29 @@ public class Util {
             Element img = (Element) images.get(i);
             String url = img.attr(delayAttrib);
             if (url != null && !url.isEmpty()) {
-                img.setAttribute("src", url);
+                img.attr("src", url);
             }
         }
     }
 
     /**
      * Fix nested block tags within inline tags.
-     *
+     * Couldn't get it to work
      * @param contentElement The element to check for nested tags.
      */
-    public static void fixBlockTagsNestedInInlineTags(Element contentElement) {
-        NodeIterator iterator = contentElement.getOwnerDocument().createNodeIterator(
-                contentElement, NodeFilter.SHOW_ELEMENT, null, false
-        );
-        Node element;
-        while ((element = iterator.nextNode()) != null) {
-            if (isInlineElement(element) && isBlockElementInside(element)) {
-                moveElementsOutsideTag(element);
-            }
-        }
-    }
+//    public static void fixBlockTagsNestedInInlineTags(Element contentElement) {
+//        var elements = contentElement.getAllElements();
+//        var garbage = new ArrayList<Element>();
+//        for (Element element: elements) {
+//            if (isInlineElement(element) && isBlockElementInside(element)) {
+////                moveElementsOutsideTag(element);
+//                garbage.add(element);
+//            }
+//        }
+//        for (Element elem: garbage) {
+//            elem.remove();
+//        }
+//    }
 
     /**
      * Check if a block element is inside an inline element.
@@ -717,30 +601,64 @@ public class Util {
      * @param inlineElement The inline element to check.
      * @return True if a block element is inside, false otherwise.
      */
-    private static boolean isBlockElementInside(Node inlineElement) {
-        NodeIterator iterator = inlineElement.getOwnerDocument().createNodeIterator(
-                inlineElement, NodeFilter.SHOW_ELEMENT, null, false
-        );
-        Node element;
-        while ((element = iterator.nextNode()) != null) {
-            if (isBlockElement(element)) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean isBlockElementInside(Element inlineElement) {
+        var elems = inlineElement.getAllElements();
+        return elems.stream().anyMatch(Util::isBlockElement);
+//        var iterator = inlineElement..getAllElements().createNodeIterator(
+//                inlineElement, NodeFilter.SHOW_ELEMENT, null, false
+//        );
+//        Node element;
+//        while ((element = iterator.nextNode()) != null) {
+//            if (isBlockElement(element)) {
+//                return true;
+//            }
+//        }
     }
 
     /**
+     * Remove a specific style value from an element and its descendants.
+     *
+     * @param element   The root element.
+     * @param styleName The name of the style to remove.
+     * @param value     The value of the style to remove.
+     */
+    public static void removeStyleValue(Element element, String styleName, String value) {
+        if (value != null) {
+            element.traverse((node, x) -> {
+                if (node instanceof Element) {
+                    Element el = (Element) node;
+                    String styleValue = el.attr("style");
+                    if (styleValue.contains(styleName + ": " + value)) {
+                        el.removeAttr("style");
+                    }
+                }
+            });
+        }
+    }
+    /**
+     * Couldn't get to work
      * Move elements outside their current tag.
      *
      * @param inlineElement The element whose children to move outside.
      */
-    public static void moveElementsOutsideTag(Node inlineElement) {
-        Node parent = inlineElement.parent();
-        while (inlineElement.hasChildNodes()) {
-            parent.insertBefore(inlineElement.getFirstChild(), inlineElement);
-        }
-    }
+//    public static void moveElementsOutsideTag(Element inlineElement) {
+//        if (inlineElement == null)
+//            return;
+//        Element parent;
+//        if ((parent = inlineElement.parent())!= null) {
+//            while (inlineElement.childNodeSize() != 0) {
+//                Element child;
+//                if ((child = inlineElement.firstElementChild()) != null) {
+//                    int inlinesIndex = inlineElement.elementSiblingIndex();
+//                    parent.insertChildren(inlinesIndex, child);
+//                    fixBlockTagsNestedInInlineTags(child);
+//                } else {
+//                    break;
+//                }
+//
+//            }
+//        }
+//    }
 
 
     /**
@@ -750,8 +668,7 @@ public class Util {
      * @return True if the node is an inline element, false otherwise.
      */
     public static boolean isInlineElement(Node node) {
-        return node.getNodeType() == Node.ELEMENT_NODE &&
-                Arrays.asList(INLINE_ELEMENTS).contains(node.nodeName().toLowerCase());
+        return INLINE_ELEMENTS.contains(node.nodeName().toLowerCase());
     }
 
     /**
@@ -761,8 +678,7 @@ public class Util {
      * @return True if the node is a block element, false otherwise.
      */
     public static boolean isBlockElement(Node node) {
-        return node.getNodeType() == Node.ELEMENT_NODE &&
-                Arrays.asList(BLOCK_ELEMENTS).contains(node.nodeName().toLowerCase());
+        return BLOCK_ELEMENTS.contains(node.nodeName().toLowerCase());
     }
 
     /**
@@ -773,7 +689,7 @@ public class Util {
      * @return The source URL of the first image found, or null if none found.
      */
     public static String getFirstImgSrc(Document dom, String selector) {
-        Element img = (Element) dom.querySelector(selector + " img");
+        Element img = (Element) dom.selectFirst(selector + " img");
         return img != null ? img.attr("src") : null;
     }
 
@@ -795,12 +711,12 @@ public class Util {
      * @param imgCss  The CSS selector for images.
      */
     public static void resolveLazyLoadedImages(Element content, String imgCss) {
-        Elements imgs = content.querySelectorAll(imgCss);
+        Elements imgs = content.select(imgCss);
         for (int i = 0; i < imgs.size(); i++) {
             Element img = (Element) imgs.get(i);
             String dataSrc = img.attr("data-src");
             if (dataSrc != null && !dataSrc.trim().isEmpty()) {
-                img.setAttribute("src", dataSrc.trim());
+                img.attr("src", dataSrc.trim());
             }
         }
     }
@@ -816,7 +732,7 @@ public class Util {
         for (int i = 0; i < links.size(); i++) {
             Element link = (Element) links.get(i);
             if (isLocalHyperlink(baseUri, link)) {
-                link.setAttribute("href", "#" + extractHashFromUri(link.attr("href")));
+                link.attr("href", "#" + extractHashFromUri(link.attr("href")));
             }
         }
     }
@@ -860,14 +776,6 @@ public class Util {
     }
 
 
-    public static void setStyleToDefault(Element element) {
-        String[] styleProperties = {"color", "fontSize"};
-        String[] primary = findPrimaryStyleSettings(element, styleProperties);
-        for (int i = 0; i < styleProperties.length; ++i) {
-            removeStyleValue(element, styleProperties[i], primary[i]);
-        }
-    }
-
     public static void removeUnusedHeadingLevels(Element contentElement) {
         for (String tag : HEADER_TAGS) {
             Elements headings = contentElement.select(tag);
@@ -896,16 +804,18 @@ public class Util {
     /**
      * Generate a list of chapters from hyperlinks.
      *
-     * @param contentElement        The element containing the hyperlinks.
-     * @param isChapterPredicate    A predicate to determine if a link is a chapter link.
-     * @param getChapterArc         A function to get the chapter arc for a link.
+     * @param element        The element containing the hyperlinks.
      * @return A list of chapters.
      */
-    public static List<Chapter> hyperlinksToChapterList(Element contentElement,
-                                                        Predicate<Element> isChapterPredicate,
-                                                        Function<Element, String> getChapterArc) {
-        // Implementation details are omitted for brevity and would require custom classes and more complex logic.
-        return new ArrayList<>(); // Placeholder implementation
+    public static List<Chapter> hyperlinksToChapterList(Element element){
+        List<Chapter> chapters = new ArrayList<>();
+        var elements = element.select("a");
+        for (Element elem : elements) {
+            String title = elem.text();
+            String url = element.attr("href");
+            chapters.add(new Chapter(title, url));
+        }
+        return chapters;
     }
 
     /**
@@ -947,8 +857,17 @@ public class Util {
      * @return A Chapter object representing the hyperlink.
      */
     public static Chapter hyperLinkToChapter(Element link, String newArc) {
-        // Placeholder for Chapter class, which would need to be defined elsewhere
-        return new Chapter(link.attr("href"), link.getTextContent().trim(), newArc);
+        return new Chapter(link.attr("href").trim(), link.text().trim(), newArc);
+    }
+
+    /**
+     * Convert a hyperlink to a chapter object.
+     *
+     * @param link   The hyperlink element.
+     * @return A Chapter object representing the hyperlink.
+     */
+    public static Chapter hyperLinkToChapter(Element link) {
+        return new Chapter(link.attr("href").trim(), link.text().trim());
     }
 
     /**
@@ -961,7 +880,7 @@ public class Util {
     public static Comment createComment(Document doc, String content) {
         // Ensure the comment content does not contain double hyphens
         String escapedContent = content.replace("--", "%2D%2D");
-        return doc.createComment("  " + escapedContent + "  ");
+        return new Comment(escapedContent);
     }
 
     /**
@@ -970,7 +889,6 @@ public class Util {
      * @param dom The DOM to add the declaration to.
      */
     public static void addXmlDeclarationToStart(Document dom) {
-        // This method is a placeholder as Java's DOM API does not support adding XML declarations in this manner.
     }
 
     /**
@@ -978,14 +896,14 @@ public class Util {
      *
      * @param dom The DOM to add the DOCTYPE to.
      */
-    public static void addXhtmlDocTypeToStart(Document dom) {
-        DocumentType docType = dom.getImplementation().createDocumentType(
-                "html",
-                "-//W3C//DTD XHTML 1.1//EN",
-                "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"
-        );
-        dom.insertBefore(docType, dom.getDocumentElement());
-    }
+//    public static void addXhtmlDocTypeToStart(Document dom) {
+//        DocumentType docType = dom.getImplementation().createDocumentType(
+//                "html",
+//                "-//W3C//DTD XHTML 1.1//EN",
+//                "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"
+//        );
+//        dom.insertBefore(docType, dom.getDocumentElement());
+//    }
 
     /**
      * Check if a string is white space.
@@ -1013,40 +931,6 @@ public class Util {
         }
     }
 
-    /**
-     * Convert an XML document to a string with an XML declaration.
-     *
-     * @param dom The XML document to convert.
-     * @return A string representation of the XML document.
-     */
-    public static String xmlToString(Document dom) {
-        addXmlDeclarationToStart(dom);
-        try {
-            Transformer transformer = TransformerFactory.newInstance().newTransformer();
-            StringWriter writer = new StringWriter();
-            transformer.transform(new DOMSource(dom), new StreamResult(writer));
-            return writer.toString();
-        } catch (TransformerException e) {
-            return null; // Or handle the exception as appropriate
-        }
-    }
-
-    /**
-     * Iterate over elements in a root node with a specified filter.
-     *
-     * @param root  The root node to start the iteration.
-     * @param filter The filter to apply to the elements.
-     * @return A list of elements that pass the filter.
-     */
-    public static List<Node> iterateElements(Node root, NodeFilter filter) {
-        List<Node> elements = new ArrayList<>();
-        NodeIterator iterator = root.getOwnerDocument().createNodeIterator(root, NodeFilter.SHOW_ELEMENT, filter, false);
-        Node node;
-        while ((node = iterator.nextNode()) != null) {
-            elements.add(node);
-        }
-        return elements;
-    }
 
 
     /**
@@ -1110,18 +994,19 @@ public class Util {
      * @param dom The XML document to convert.
      * @return A string representation of the XML document.
      */
-    public static String xmlToString(Document dom) {
-        addXmlDeclarationToStart(dom);
-        try {
-            Transformer transformer = TransformerFactory.newInstance().newTransformer();
-            StringWriter writer = new StringWriter();
-            transformer.transform(new DOMSource(dom), new StreamResult(writer));
-            return writer.toString();
-        } catch (TransformerException e) {
-            return null; // Or handle the exception as appropriate
-        }
-    }
-
+//    public static String xmlToString(Document dom) {
+//        dom.outputSettings()
+//        addXmlDeclarationToStart(dom);
+//        try {
+//            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+//            StringWriter writer = new StringWriter();
+//            transformer.transform(new DOMSource(dom), new StreamResult(writer));
+//            return writer.toString();
+//        } catch (TransformerException e) {
+//            return null; // Or handle the exception as appropriate
+//        }
+//    }
+//
     /**
      * Pad a number with zeros to a total of four digits.
      *
@@ -1139,15 +1024,15 @@ public class Util {
      * @param filter The filter to apply to the elements.
      * @return A list of elements that pass the filter.
      */
-    public static List<Node> iterateElements(Node root, NodeFilter filter) {
-        List<Node> elements = new ArrayList<>();
-        NodeIterator iterator = root.getOwnerDocument().createNodeIterator(root, NodeFilter.SHOW_ELEMENT, filter, false);
-        Node node;
-        while ((node = iterator.nextNode()) != null) {
-            elements.add(node);
-        }
-        return elements;
-    }
+//    public static List<Node> iterateElements(Node root, NodeFilter filter) {
+//        List<Node> elements = new ArrayList<>();
+//        NodeIterator iterator = root.ownerDocument().createNodeIterator(root, NodeFilter.SHOW_ELEMENT, filter, false);
+//        Node node;
+//        while ((node = iterator.nextNode()) != null) {
+//            elements.add(node);
+//        }
+//        return elements;
+//    }
 
     /**
      * Get elements by tag name with an optional filter.
@@ -1169,31 +1054,19 @@ public class Util {
         return elements;
     }
 
+
     /**
-     * Get the first element by tag name with an optional filter.
+     * Get parent if match "parentTag" and it is not too large. If too large, we don't want to remove
+     * it incase we are incorrect. Used in removing next/previous chaper links
      *
-     * @param dom     The document to search.
-     * @param tagName The tag name to search for.
-     * @param filter  An optional filter for the element.
-     * @return The first element that matches the tag name and filter, or null if none found.
-     */
-    public static Element getElement(Document dom, String tagName, Predicate<Element> filter) {
-        List<Element> elements = getElements(dom, tagName, filter);
-        return elements.isEmpty() ? null : elements.get(0);
-    }
-    /**
-     * Move a node to a new parent if the current parent matches a specific tag.
-     *
-     * @param element    The element to move.
+     * @param element    The element to confirm parent of .
      * @param parentTag  The tag name of the parent to match.
-     * @return The moved element, or the original element if the parent did not match.
+     * @return The parent if matched, else the orig. element passed in
      */
-    public static Node moveIfParent(Node element, String parentTag) {
-        Node parent = element.parent();
-        if (parent.nodeName().equalsIgnoreCase(parentTag) && parent.().length() < 200) {
-            parent.parent().insertBefore(element, parent);
-            parent.parent().removeChild(parent);
-            return element;
+    public static Element moveIfParent(Element element, String parentTag) {
+        Element parent = element.parent();
+        if (parent != null && parent.nodeName().equalsIgnoreCase(parentTag) && parent.text().length() < 200) {
+            return parent;
         }
         return element;
     }
@@ -1431,12 +1304,6 @@ public class Util {
         }
         return -1;
     }
-
-
-// The methods findIndexOfClosingBracket and findOpeningBracket are reused from previous conversions.
-
-
-
 
 }
 

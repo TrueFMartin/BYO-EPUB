@@ -1,50 +1,66 @@
 package com.folioreader.builder.parsers;
+
+import com.folioreader.builder.Chapter;
+import com.folioreader.builder.Parser;
+import com.folioreader.builder.Util;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class DefaultParser extends Parser {
 
-    private DefaultParserSiteSettings siteConfigs;
-    private FindContentLogic logic;
-
+    String titleSelect;
+    String authorSelect;
+    String chapterSelect;
+    String chapterTitleSelect;
+    String bodySelect;
+    String excludeSelect;
     public DefaultParser() {
         super();
-        this.siteConfigs = new DefaultParserSiteSettings();
-        this.logic = null;
     }
 
-    public List<String> getChapterUrls(Document dom) {
+    public List<Chapter> getChapterUrls(Document dom) {
         return Util.hyperlinksToChapterList(dom.body());
     }
 
     public Element findContent(Document dom) {
         String hostName = Util.extractHostName(dom.baseUri());
-        this.logic = this.siteConfigs.constructFindContentLogicForSite(hostName);
-        return this.logic.findContent(dom);
+        return dom.selectFirst("body");
     }
 
     public void populateUI(Document dom) {
-        // UI related methods are not directly translatable to Java
+
     }
 
     public void removeUnwantedElementsFromContentElement(Element element) {
-        Util.removeElements(element.select("script[src], iframe"));
+        Util.removeElements(element.select("script[src], iframe" + ", " + excludeSelect));
         Util.removeComments(element);
         Util.removeUnwantedWordpressElements(element);
         Util.removeMicrosoftWordCrapElements(element);
-        this.logic.removeUnwanted(element);
     }
 
-    public Element findChapterTitle(Document dom) {
-        return this.logic.findChapterTitle(dom);
+    public String findChapterTitle(Document dom) {
+        return dom.selectFirst(chapterTitleSelect).text();
     }
 
-    // Additional helper methods and classes...
+    @Override
+    public String extractTitleImpl(Document doc) {
+        return doc.selectFirst(titleSelect).text();
+    }
 
-    // Assuming DefaultParserSiteSettings and FindContentLogic are other classes that provide specific logic for this parser
+    @Override
+    public String extractAuthor(Document doc) {
+        return doc.selectFirst(authorSelect).text();
+    }
+
+    @Override
+    public Elements getInformationEpubItemChildNodes(Document dom) {
+        return null;
+    }
+
 }
 

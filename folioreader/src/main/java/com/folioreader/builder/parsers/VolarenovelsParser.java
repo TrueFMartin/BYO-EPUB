@@ -1,29 +1,31 @@
 package com.folioreader.builder.parsers;
 
+import com.folioreader.builder.Chapter;
+import com.folioreader.builder.Parser;
+import com.folioreader.builder.Util;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class VolarenovelsParser extends Parser {
 
-    static {
-        ParserFactory.register("volarenovels.com", VolarenovelsParser::new);
-    }
 
     public VolarenovelsParser() {
         super();
     }
 
-    @Override
-    public List<Chapter> getChapterUrls(Document doc) {
-        Elements links = doc.select("ul.list-chapters a");
-        return links.stream().map(Util::hyperLinkToChapter).collect(Collectors.toList());
+    public VolarenovelsParser(Void unused) {
+        super();
     }
 
-    @Override
+    public List<Chapter> getChapterUrls(Document doc) {
+        Elements links = doc.select("ul.list-chapters a");
+        return Util.hyperlinksToChapterList(links.first());
+    }
+
     public Element findContent(Document doc) {
         return doc.selectFirst("div.panel-body div.fr-view");
     }
@@ -32,6 +34,11 @@ public class VolarenovelsParser extends Parser {
     public String extractTitleImpl(Document doc) {
         Element titleElement = doc.selectFirst("h3.title");
         return titleElement != null ? titleElement.text() : null;
+    }
+
+    @Override
+    public String extractAuthor(Document doc) {
+        return null;
     }
 
     @Override
@@ -46,7 +53,6 @@ public class VolarenovelsParser extends Parser {
         return chapterTitle != null ? chapterTitle.text() : null;
     }
 
-    @Override
     public String findCoverImageUrl(Document doc) {
         return Util.getFirstImgSrc(doc, "div#content-container");
     }

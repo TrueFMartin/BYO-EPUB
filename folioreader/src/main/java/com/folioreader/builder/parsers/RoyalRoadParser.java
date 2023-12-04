@@ -1,8 +1,17 @@
 package com.folioreader.builder.parsers;
+
+import com.folioreader.builder.Chapter;
+import com.folioreader.builder.Parser;
+import com.folioreader.builder.Util;
+
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class RoyalRoadParser extends Parser {
 
@@ -14,11 +23,16 @@ public class RoyalRoadParser extends Parser {
         return 1;
     }
 
-    public List<String> getChapterUrls(Document dom) throws IOException {
+    public List<Chapter> getChapterUrls(Document dom) {
         // Fetch new page to get all chapter links (using JSoup)
-        Document tocHtml = Jsoup.connect(dom.baseUri()).get();
+        Document tocHtml = null;
+        try {
+            tocHtml = Jsoup.connect(dom.baseUri()).get();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         Elements table = tocHtml.select("table#chapters");
-        return Util.hyperlinksToChapterList(table);
+        return Util.hyperlinksToChapterList(table.first());
     }
 
     public Element findContent(Document dom) {
@@ -65,12 +79,12 @@ public class RoyalRoadParser extends Parser {
 
     public String extractAuthor(Document dom) {
         Element authorElement = dom.select("div.fic-header h4 span a").first();
-        return authorElement != null ? authorElement.text().trim() : super.extractAuthor(dom);
+        return authorElement.text();
     }
 
     public String extractSubject(Document dom) {
         Elements tags = dom.select("div.fiction-info span.tags .label");
-        return tags.stream().map(Element::text).collect(Collectors.joining(", "));
+        return tags.stream().map(Element::text).collect(Collectors.joining(","));
     }
 
     public String extractDescription(Document dom) {
@@ -78,8 +92,8 @@ public class RoyalRoadParser extends Parser {
         return descriptionElement != null ? descriptionElement.text().trim() : null;
     }
 
-    public Element findChapterTitle(Document dom) {
-        return dom.select("h1, h2").first();
+    public String findChapterTitle(Document dom) {
+        return dom.select("h1, h2").first().text();
     }
 
     public static void removeOlderChapterNavJunk(Element content) {
@@ -98,6 +112,11 @@ public class RoyalRoadParser extends Parser {
         super.removeUnusedElementsToReduceMemoryConsumption(webPageDom);
         removeImgTagsWithNoSrc(webPageDom);
         tagAuthorNotesBySelector(webPageDom, "div.author-note-portlet");
+    }
+
+    @Override
+    public Elements getInformationEpubItemChildNodes(Document dom) {
+        return null;
     }
 
     private void removeImgTagsWithNoSrc(Document webPageDom) {

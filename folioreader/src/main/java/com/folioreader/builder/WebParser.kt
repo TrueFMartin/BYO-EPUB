@@ -12,8 +12,6 @@ class WebParser(val url: String) {
     fun parser(document: Document): Elements {
         var doc = getContent()
         var l : Node
-        l.ext
-        doc.insertChildren(position, childrenToInsert)
         doc.removeAttr("someattribute")
         return doc.select("#dsc ul.listchap")
     }

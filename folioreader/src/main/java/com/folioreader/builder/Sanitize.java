@@ -49,7 +49,7 @@ public class Sanitize {
 
     private TextNode cleanTextNode(TextNode textNode) {
         String text = stripInvalidCharsFromString(textNode.getWholeText());
-        return new TextNode(text, textNode.baseUri());
+        return new TextNode(text);
     }
 
     private static String stripInvalidCharsFromString(String s) {

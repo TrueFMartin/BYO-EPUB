@@ -1,8 +1,14 @@
 package com.folioreader.builder.parsers;
 
+import com.folioreader.builder.Chapter;
+import com.folioreader.builder.Parser;
+import com.folioreader.builder.Util;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import java.util.List;
 
 public class WoopreadParser extends Parser {
 
@@ -24,21 +30,18 @@ public class WoopreadParser extends Parser {
     @Override
     public String extractAuthor(Document doc) {
         Element authorLabel = doc.selectFirst("div.author-content a");
-        return authorLabel != null ? authorLabel.text() : super.extractAuthor(doc);
+        return authorLabel.text();
     }
 
-    @Override
     public String findCoverImageUrl(Document doc) {
         return Util.getFirstImgSrc(doc, "div.summary_image");
     }
 
-    @Override
     public List<Chapter> getChapterUrls(Document doc) {
         Elements menu = doc.select("ul.version-chap");
-        return Util.hyperlinksToChapterList(menu).stream().collect(Collectors.toList());
+        return Util.hyperlinksToChapterList(menu.first());
     }
 
-    @Override
     public String findChapterTitle(Document doc) {
         Element chapterTitle = doc.selectFirst("h3");
         return chapterTitle != null ? chapterTitle.text() : null;

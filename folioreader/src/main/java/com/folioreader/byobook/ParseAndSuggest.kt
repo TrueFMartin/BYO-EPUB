@@ -12,7 +12,6 @@ class ParseAndSuggest(url: URL) {
     var doc: Document? = Jsoup.connect(url.toString()).get()
 
     fun populate () {
-        title = doc.get
     }
 
     fun moveViewPortDown(sections: BookSections) {
@@ -23,7 +22,7 @@ class ParseAndSuggest(url: URL) {
 
     }
 
-    fun getFinal(): ParsedBook {
+    fun getFinal() {
 
     }
 }

@@ -1,10 +1,10 @@
 package com.folioreader.builder;
 
-import org.apache.http.HttpResponse;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,11 +31,6 @@ public class ImageCollector {
             @Override
             public List<ImageInfo> imagesToPackInEpub() {
                 return new ArrayList<>();
-            }
-
-            @Override
-            public void setCoverImageUrl(String url) {
-                // Stub implementation
             }
         };
     }
@@ -97,16 +92,6 @@ public class ImageCollector {
         return imageInfo;
     }
 
-    public void setCoverImageUrl(String url) {
-        if (url != null && !url.isEmpty()) {
-            ImageInfo info = imageInfoByUrl(url);
-            if (info == null) {
-                info = addImageInfo(url, url, null, true);
-            }
-            info.setCover(true);
-            this.coverImageInfo = info;
-        }
-    }
 
     public ImageInfo imageInfoByUrl(String url) {
         Integer index = this.urlIndex.get(url);
@@ -123,37 +108,9 @@ public class ImageCollector {
         return this.imagesToFetch.size();
     }
 
-    public void fetchImage(ImageInfo imageInfo, ProgressIeendicator progressIndicator, String parentPageUrl) {
-        try {
-            String initialUrl = this.initialUrlToTry(imageInfo);
-            this.urlIndex.put(initialUrl, imageInfo.getIndex());
-            // Assuming FetchOptions and HttpClient are classes for handling HTTP requests
-            FetchOptions fetchOptions = new FetchOptions(new FetchImageErrorHandler(parentPageUrl));
-            HttpResponse xhr = HttpClient.wrapFetch(initialUrl, fetchOptions);
-            xhr = this.findImageFileUrl(xhr, imageInfo, imageInfo.getDataOrigFileUrl(), fetchOptions);
-            imageInfo.setMediaType(xhr.getContentType());
-            imageInfo.setArrayBuffer(xhr.getArrayBuffer());
-            this.getImageDimensions(imageInfo);
-            progressIndicator.updateProgress(); // Assuming updateProgress method in ProgressIndicator
-            this.addToPackList(imageInfo);
-        } catch (Exception error) {
-            // Error handling logic
-            this.imagesToPack.add(imageInfo);
-            ErrorLog.log(error); // Assuming ErrorLog is a class for logging errors
-        }
-    }
-
-    private HttpResponse findImageFileUrl(HttpResponse xhr, ImageInfo imageInfo, String dataOrigFileUrl, FetchOptions fetchOptions) {
-        // Method implementation...
-        // Assuming HttpResponse is a class to encapsulate HTTP response data
-    }
-
-    private HttpResponse findImageFileUrlUsingDataOrigFileUrl(ImageInfo imageInfo) {
-        // Method implementation...
-    }
 
     private String initialUrlToTry(ImageInfo imageInfo) {
-        // Method implementation...
+        return imageInfo.chapterTitle;
     }
 
     public static boolean urlHasFragment(String url) {
@@ -165,19 +122,13 @@ public class ImageCollector {
     }
 
     public static String removeSizeParamsFromWordPressQuery(String originalUrl) {
-        // Method implementation...
+        return originalUrl;
     }
 
     public static boolean isWordPressHostedFile(String hostname) {
         return hostname.endsWith("files.wordpress.com") || hostname.endsWith(".wp.com");
     }
 
-    public static void removeSizeParamsFromSearch(URLSearchParams searchParams) {
-        // Assuming URLSearchParams is a class to handle URL query parameters
-        searchParams.delete("w");
-        searchParams.delete("h");
-        searchParams.delete("resize");
-    }
 
 
         public String selectImageUrlFromImagePage(Document dom) {
@@ -189,14 +140,6 @@ public class ImageCollector {
             return null;
         }
 
-        public Document preprocessImageTags(Document content, String parentPageUrl) {
-            if (this.userPreferences.isSkipImages()) {
-                content.select("img, image").remove();
-                return content;
-            } else {
-                return replaceHyperlinksToImagesWithImages(content, parentPageUrl);
-            }
-        }
 
         public static Document replaceHyperlinksToImagesWithImages(Document content, String parentPageUrl) {
             Elements toReplace = null;
@@ -209,8 +152,7 @@ public class ImageCollector {
             for (Element hyperlink : toReplace) {
                 replaceHyperlinkWithImg(hyperlink);
             }
-            // Assuming Imgur.expandGalleries is a method to handle Imgur galleries
-            return Imgur.expandGalleries(content, parentPageUrl);
+            return content;
         }
 
         private static boolean isHyperlinkToImage(Element hyperlink) {

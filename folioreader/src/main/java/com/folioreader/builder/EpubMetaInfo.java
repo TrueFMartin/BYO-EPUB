@@ -42,7 +42,4 @@ public class EpubMetaInfo {
                 "table, th, td {...}";
     }
 
-    // Getter and setter methods for the class fields
-
-    // Additional methods as needed...
 }
