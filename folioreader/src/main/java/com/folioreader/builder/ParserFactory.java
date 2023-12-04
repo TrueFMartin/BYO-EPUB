@@ -10,20 +10,21 @@ import com.folioreader.builder.parsers.WuxiaworldWorldParser;
 
 import org.jsoup.nodes.Document;
 
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ParserFactory {
-    private Map<String, Function<Void, Parser>> parsers;
+    private Map<String, Supplier<Parser>> parsers;
     private List<ParserRule> parserRules;
     private List<ParserUrlRule> parserUrlRules;
     private List<ManualSelection> manualSelection;
 
     public ParserFactory() {
-        this.parsers = new HashMap<String, Function<Void, Parser>>();
+        this.parsers = new HashMap<String, Supplier<Parser>>();
         this.parserRules = new ArrayList<>();
         this.parserUrlRules = new ArrayList<>();
         this.manualSelection = new ArrayList<>();
@@ -60,12 +61,12 @@ public class ParserFactory {
         return hostName.startsWith("www.") ? hostName.substring(4) : hostName;
     }
 
-    public static Parser getParser(String url, Document dom) {
+    public Parser getParser(String url) {
         String s = stripWebArchive(stripLeadingWww(url));
-        return new WanderinginnParser();
+        return this.parsers.get(s).get();
     }
 
-    public void register(String hostName, Function<Void, Parser> constructor) {
+    public void register(String hostName, Supplier<Parser> constructor) {
         String strippedHostName = ParserFactory.stripLeadingWww(hostName);
         if (!this.parsers.containsKey(strippedHostName)) {
             this.parsers.put(strippedHostName, constructor);
@@ -74,7 +75,7 @@ public class ParserFactory {
         }
     }
 
-    public void reregister(String hostName, Function<Void, Parser> constructor) {
+    public void reregister(String hostName, Supplier<Parser> constructor) {
         this.parsers.put(ParserFactory.stripLeadingWww(hostName), constructor);
     }
 
