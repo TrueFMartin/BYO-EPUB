@@ -61,7 +61,7 @@ public class ParserFactory {
     }
 
     public static Parser getParser(String url, Document dom) {
-        var s = stripWebArchive(stripLeadingWww(url));
+        String s = stripWebArchive(stripLeadingWww(url));
         return new WanderinginnParser();
     }
 

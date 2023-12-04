@@ -2,6 +2,7 @@ package com.folioreader.builder;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -76,7 +77,8 @@ public class Util {
     public static Document createEmptyHtmlDoc() {
         Document doc;
         try {
-            var docW3 = DocumentBuilderFactory.newInstance()
+            org.w3c.dom.Document docW3;
+            docW3 = DocumentBuilderFactory.newInstance()
                     .newDocumentBuilder()
                     .newDocument();
             doc = new Document(docW3.getBaseURI());
@@ -553,7 +555,7 @@ public class Util {
      * @param to   The destination element.
      */
     public static void copyAttributes(Element from, Element to) {
-        var attributes = from.attributes();
+        Attributes attributes = from.attributes();
         for (Attribute attr : attributes) {
             to.attr(attr.getKey(), attr.getValue());
         }
@@ -602,7 +604,7 @@ public class Util {
      * @return True if a block element is inside, false otherwise.
      */
     public static boolean isBlockElementInside(Element inlineElement) {
-        var elems = inlineElement.getAllElements();
+        Elements elems = inlineElement.getAllElements();
         return elems.stream().anyMatch(Util::isBlockElement);
 //        var iterator = inlineElement..getAllElements().createNodeIterator(
 //                inlineElement, NodeFilter.SHOW_ELEMENT, null, false
@@ -809,7 +811,7 @@ public class Util {
      */
     public static List<Chapter> hyperlinksToChapterList(Element element){
         List<Chapter> chapters = new ArrayList<>();
-        var elements = element.select("a");
+        Elements elements = element.select("a");
         for (Element elem : elements) {
             String title = elem.text();
             String url = element.attr("href");
@@ -1133,7 +1135,7 @@ public class Util {
      */
     public static boolean isXhtmlInvalid(String xhtmlAsString, String mimeType) {
         try {
-            var doc = Jsoup.parse(xhtmlAsString);
+            Document doc = Jsoup.parse(xhtmlAsString);
             doc.outputSettings().escapeMode(org.jsoup.nodes.Entities.EscapeMode.xhtml);
             doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
             return false;
@@ -1176,7 +1178,7 @@ public class Util {
      * @param content  The element where the parsed content should be inserted.
      */
     public static void parseHtmlAndInsertIntoContent(String htmlText, Element content) {
-        var parsed = Jsoup.parse(htmlText);
+        Document parsed = Jsoup.parse(htmlText);
         Element body = (Element) parsed.select("body").get(0);
         content.replaceWith(body);
     }

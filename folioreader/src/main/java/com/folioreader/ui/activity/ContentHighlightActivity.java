@@ -1,6 +1,5 @@
 package com.folioreader.ui.activity;
 
-import android.annotation.SuppressLint;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Build;
@@ -67,7 +66,7 @@ public class ContentHighlightActivity extends AppCompatActivity {
                 color = ContextCompat.getColor(this, R.color.black);
             } else {
                 int[] attrs = {android.R.attr.navigationBarColor};
-                @SuppressLint("ResourceType") TypedArray typedArray = getTheme().obtainStyledAttributes(attrs);
+                TypedArray typedArray = getTheme().obtainStyledAttributes(attrs);
                 color = typedArray.getColor(0, ContextCompat.getColor(this, R.color.white));
             }
             getWindow().setNavigationBarColor(color);
