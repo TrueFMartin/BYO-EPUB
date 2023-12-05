@@ -10,6 +10,8 @@ import com.folioreader.builder.parsers.WuxiaworldWorldParser;
 
 import org.jsoup.nodes.Document;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +35,7 @@ public class ParserFactory {
         });
         register("wuxiaworld.com", WuxiaworldParser::new);
         register("wuxiaworld.world", WuxiaworldWorldParser::new);
-        register("thewanderinginn.com", WanderinginnParser::new);
+        register("wanderinginn.com", WanderinginnParser::new);
         register("wordexcerpt.com", WordexcerptParser::new);
         register("volarenovels.com", VolarenovelsParser::new);
         register("rubymaybetranslations.com", RubymaybetranslationsParser::new);
@@ -62,8 +64,17 @@ public class ParserFactory {
     }
 
     public Parser getParser(String url) {
-        String s = stripWebArchive(stripLeadingWww(url));
-        return this.parsers.get(s).get();
+//        String s = stripWebArchive(stripLeadingWww(url));
+        try {
+            URL u = new URL(url);
+            var parserFunc = this.parsers.get(u.getHost());
+            if (parserFunc != null) {
+                return parserFunc.get();
+            }
+            return new WanderinginnParser();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void register(String hostName, Supplier<Parser> constructor) {

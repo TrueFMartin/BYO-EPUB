@@ -5,6 +5,8 @@ import com.folioreader.builder.Util;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class WanderinginnParser extends WordpressBaseParser {
@@ -13,20 +15,23 @@ public class WanderinginnParser extends WordpressBaseParser {
         super();
     }
 
-    public WanderinginnParser(Void unused) {
-        super();
-    }
 
+    @Override
     public List<Chapter> getChapterUrls(Document dom) {
         Elements chapterLinks = dom.select("#table-of-contents a:not(.book-title-num)");
-        return Util.hyperlinksToChapterList(chapterLinks.first());
+        var chapters = new ArrayList<Chapter>();
+        chapters.ensureCapacity(chapters.size());
+        chapterLinks.forEach(elem -> chapters.add(Util.hyperLinkToChapter(elem)));
+        return chapters;
     }
 
-    public String extractTitleImpl() {
+    @Override
+    public String extractTitleImpl(Document doc) {
         return "The Wandering Inn"; // The title is statically defined
     }
 
-    public String extractAuthor() {
+    @Override
+    public String extractAuthor(Document doc) {
         return "pirateaba"; // The author is statically defined
     }
 }

@@ -112,7 +112,6 @@ public abstract class Parser {
     public abstract Element findContent(Document doc);
     public abstract String findChapterTitle(Document doc);
 
-    // Continued from the previous conversion
 
     // Additional methods in Parser class
     public void addTitleToContent(Document webPage, Element content) {
@@ -169,7 +168,7 @@ public abstract class Parser {
         return metaInfo;
     }
 
-    private String makeSaveAsFileNameWithoutExtension(String title, boolean useFullTitle) {
+    public String makeSaveAsFileNameWithoutExtension(String title, boolean useFullTitle) {
         int maxFileNameLength = useFullTitle ? 512 : 20;
         String fileName = (title == null) ? "web" : Util.safeForFileName(title, maxFileNameLength);
         if (Util.isStringWhiteSpace(fileName)) {
@@ -178,7 +177,6 @@ public abstract class Parser {
         return fileName;
     }
 
-// Continued from the previous conversion
 
     public List<Chapter> singleChapterStory(String baseUrl, Document dom) {
         List<Chapter> chapters = new ArrayList<>();
@@ -234,7 +232,6 @@ public abstract class Parser {
         link.attr("href", link.absUrl("href"));
     }
 
-    // Continued from the previous conversion
 
     public void tagAuthorNotes(List<Element> elements) {
         for (Element element : elements) {
@@ -313,7 +310,6 @@ public abstract class Parser {
         return chapters;
     }
 
-// Continued from the previous conversion
 
     public void preprocessRawDom(Document webPageDom) {
         // Default implementation; override in subclasses as needed.
@@ -356,7 +352,6 @@ public abstract class Parser {
         return null;
     }
 
-    // Continued from the previous conversion
 
     public void onStartCollecting() {
         // Hook point, called when "Pack EPUB" is pressed. Override in derived classes if needed.
@@ -400,7 +395,6 @@ public abstract class Parser {
         // Implementation for fetching images used in the document.
         // Involves imageCollector and other utility methods for image handling.
     }
-// Continued from the previous conversion
 
     public List<Document> groupPagesToFetch(List<Document> webPages, int index) {
         int blockSize = Math.min(userPreferences.synchronousLimit, clampSimultanousFetchSize());

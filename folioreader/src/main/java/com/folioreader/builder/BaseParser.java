@@ -1,6 +1,8 @@
 package com.folioreader.builder;
 
 
+import com.folioreader.byobook.BookBuilder;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

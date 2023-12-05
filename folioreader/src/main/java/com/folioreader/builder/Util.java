@@ -328,7 +328,7 @@ public class Util {
      * @param element The element to clean.
      */
     public static void removeMicrosoftWordCrapElements(Element element) {
-        Elements nodes = element.select("O:P");
+        Elements nodes = element.getElementsByTag("O:P");
         for (Element node : nodes) {
             flattenNode((Element) node);
         }
