@@ -1,24 +1,14 @@
 package com.folioreader.android.sample
 
-import android.app.Application
+import android.content.Intent
 import android.os.Bundle
-import android.os.Looper
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.os.HandlerCompat
-import com.folioreader.byobook.MainBuilder
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.newSingleThreadContext
-import java.util.concurrent.Executors
-import kotlinx.coroutines.runBlocking
 
 
 class BuildBookSetupActivity: AppCompatActivity() {
     lateinit var etEnterURL: EditText
-    private val context = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
-    private var mainBuilder = MainBuilder("")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_newbook)
@@ -28,18 +18,15 @@ class BuildBookSetupActivity: AppCompatActivity() {
         }
     }
 
-    private fun demoWithRunBlocking() = runBlocking {
-
-            launch(context) {
-                runBlocking {
-                    mainBuilder.run()
-                }
-            }
-
-    }
     private fun submitCallback() {
-        val url = etEnterURL.text
-        mainBuilder = MainBuilder(url.toString())
-        demoWithRunBlocking()
+        var url = etEnterURL.text.toString()
+        // FIXME FOR TESTING
+        url = "https://www.wanderinginn.com/table-of-contents"
+        val i = Intent(
+            applicationContext,
+            ConfirmNewBookActivity::class.java
+        )
+        i.putExtra("EXTRA_URL", url)
+        startActivity(i)
     }
 }

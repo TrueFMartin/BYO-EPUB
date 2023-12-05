@@ -1,10 +1,9 @@
 package com.folioreader.byobook;
 
-import android.content.Intent;
-import android.net.Uri;
-import android.provider.DocumentsContract;
+import android.util.Log;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.regex.Pattern;
 
@@ -24,6 +23,14 @@ public class BookBuilder {
     }
     private static Resource getResource( String data, String href ) {
         return new Resource( getResource( data ), href );
+    }
+
+    private Resource getResource(InputStream stream, String href) {
+        try {
+            return new Resource(stream, href);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     Book book;
@@ -52,33 +59,30 @@ public class BookBuilder {
     public void addChapter(String chapterName, String chapterText) {
         book.addSection(chapterName,
                 getResource(chapterText, rgx.matcher(chapterName.toLowerCase()).replaceAll("")
-                + ".html"));
+                + ".xhtml"));
     }
-    public void build(String fileName) {
+    public void build(String uri) {
         try {
             // Create EpubWriter
             EpubWriter epubWriter = new EpubWriter();
-
+            Log.d("BookBuilder", "writing book" + uri);
             // Write the Book as Epub
-            epubWriter.write(book, new FileOutputStream(fileName));
+            epubWriter.write(book, new FileOutputStream(uri));
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
-    // Request code for creating a PDF document.
-    private static final int CREATE_FILE = 1;
+    public void build(FileOutputStream stream) {
+        EpubWriter epubWriter = new EpubWriter();
+        try {
+            epubWriter.write(book, stream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    private void createFile(Uri pickerInitialUri) {
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/pdf");
-        intent.putExtra(Intent.EXTRA_TITLE, "invoice.pdf");
-
-        // Optionally, specify a URI for the directory that should be opened in
-        // the system file picker when your app creates the document.
-        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
-
-//        startActivityForResult(intent, CREATE_FILE);
+    public void setStyleSheet(InputStream resourceStream) {
+        book.addResource(getResource(resourceStream, "epub.css"));
     }
 }

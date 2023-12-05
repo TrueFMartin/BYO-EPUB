@@ -28,7 +28,7 @@ public class Util {
     private static Util instance;
     private static final String[] HEADER_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"};
 
-    String XMLNS = "http://www.w3.org/1999/xhtml";
+    public static String XMLNS = "http://www.w3.org/1999/xhtml";
 
     // ugly, but we're treating <u> and <s> as inline (they are not)
     static String[] inlineElements = new String[]{"b","big","i","small","tt","abbr","acronym","cite",
