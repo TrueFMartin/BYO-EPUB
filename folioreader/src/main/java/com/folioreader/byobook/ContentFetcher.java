@@ -22,10 +22,11 @@ public class ContentFetcher {
     }
 
 
-    class ParseResult {
+    public class ParseResult {
         Document document;
         String url;
         Parser parser;
+        public int order;
 
         public ParseResult(Document document, String url) {
             this.document = document;

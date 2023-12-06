@@ -859,7 +859,7 @@ public class Util {
      * @return A Chapter object representing the hyperlink.
      */
     public static Chapter hyperLinkToChapter(Element link, String newArc) {
-        return new Chapter(link.attr("href").trim(), link.text().trim(), newArc);
+        return new Chapter(link.attr("href").trim(), link.text().trim(), newArc, -1);
     }
 
     /**

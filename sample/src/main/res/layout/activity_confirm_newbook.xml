@@ -1,18 +1,19 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_centerInParent="true">
+    android:layout_centerInParent="true"
+    android:layout_centerHorizontal="true">
 
     <TextView
         android:id="@+id/tv_file_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
         android:layout_marginLeft="10dp"
+        android:layout_marginTop="60dp"
         android:layout_marginRight="10dp"
-        android:textSize="22dp"
         android:text="File path"
-    />
+        android:textSize="22dp" />
+
     <Button
         android:id="@+id/btn_confirm_book_path"
         android:layout_width="match_parent"
@@ -38,8 +39,59 @@
         android:id="@+id/progress_bar_new_book"
         style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_below="@id/btn_cancel_book_path"
-        android:layout_marginTop="60dp"
         android:layout_centerHorizontal="true"
-        android:layout_height="wrap_content" />
+        android:layout_marginTop="60dp" />
+    <TextView
+        android:id="@+id/tv_percent_complete"
+        android:textSize="25sp"
+        android:layout_marginTop="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/progress_bar_new_book"
+        android:text="you shouldn't see this"
+        android:layout_centerHorizontal="true"
+        />
+
+
+    <NumberPicker
+        android:id="@+id/num_picker_min"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/progress_bar_new_book"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="23dp"
+        android:layout_marginRight="10dp"
+        android:alpha=".5"
+        android:background="@color/default_theme_accent_color" />
+
+    <TextView
+        android:id="@+id/label_num_picker_min"
+        android:labelFor="@+id/num_picker_min"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:layout_centerHorizontal="true"
+        android:text="First Chapter"
+        android:layout_below="@id/num_picker_min"/>
+    <NumberPicker
+        android:id="@+id/num_picker_max"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/num_picker_min"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="23dp"
+        android:layout_marginRight="10dp"
+        android:alpha=".5"
+        android:background="@color/design_default_color_primary" />
+    <TextView
+        android:id="@+id/label_num_picker_max"
+        android:labelFor="@+id/num_picker_max"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:layout_centerHorizontal="true"
+        android:text="Last Chapter"
+        android:layout_below="@id/num_picker_max"/>
 </RelativeLayout>

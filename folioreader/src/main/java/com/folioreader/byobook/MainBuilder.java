@@ -1,6 +1,6 @@
 package com.folioreader.byobook;
 
-import android.util.Log;
+import android.content.Context;
 
 import com.folioreader.builder.Chapter;
 import com.folioreader.builder.Util;
@@ -14,60 +14,81 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainBuilder{
     String url;
     BookBuilder book;
+    ContentFetcher contentFetcher;
+    ContentFetcher.ParseResult mainPage;
+
+    String title;
+    String author;
 
     public MainBuilder(String url) {
         this.url = url;
     }
 
-    public String run() {
-        var contentFetcher = new ContentFetcher();
-        ContentFetcher.ParseResult mainPage;
+    public String runInit() {
+        contentFetcher = new ContentFetcher();
         try {
             mainPage = contentFetcher.fetchContentInitial(url);
         } catch (IOException e) {
             throw new RuntimeException("failed to get initial webpage" + e);
         }
-        String title = mainPage.parser.extractTitle(mainPage.document);
-        String author = mainPage.parser.extractAuthor(mainPage.document);
+        title = mainPage.parser.extractTitle(mainPage.document);
+        author = mainPage.parser.extractAuthor(mainPage.document);
         List<Chapter> chapters = mainPage.parser.getChapterUrls(mainPage.document);
-
-        book = new BookBuilder(title);
-        if (author == null || author.isEmpty())
-            author = title;
-        var splitAuthor = author.split("[, ]");
-        if (splitAuthor.length < 1)
-            book.setAuthor("Undefined");
-        else if (splitAuthor.length < 2)
-            book.setAuthor(splitAuthor[0]);
-        else if (splitAuthor.length < 3)
-            book.setAuthor(splitAuthor[0], splitAuthor[1]);
-        else
-            book.setAuthor(splitAuthor[0], splitAuthor[splitAuthor.length-1]);
-        int i = 0;
-        for (Chapter chapter: chapters) {
-            i++;
-            // FIXME remove after testing
-            if (i > 2) {
-                Log.e("MainBuilder", "Ending chapter load because greater than 2");
-                break;
-            }
-            ContentFetcher.ParseResult chapterPage;
-            try {
-                chapterPage = contentFetcher.fetchContent(chapter.getSourceUrl());
-            } catch (IOException e) {
-                throw new RuntimeException("failed to get chapter webpage " + chapter.getSourceUrl() + e);
-            }
-            mainPage.parser.removeUnusedElementsToReduceMemoryConsumption(chapterPage.document);
-            Element chapterContent = mainPage.parser.findContent(chapterPage.document);
-            mainPage.parser.removeUnwantedElementsFromContentElement(chapterContent);
-            mainPage.parser.addTitleToContent(chapterPage.document, chapterContent);
-            book.addChapter(chapter.getTitle(), toXHTML(chapterContent.html(), chapter.getTitle()));
-        }
         return mainPage.parser.makeSaveAsFileNameWithoutExtension(title, false) + ".epub";
+    }
+
+    // and for the Handler that will update the UI from the main thread
+    ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+
+    // Create an interface to respond with the result after processing
+    public interface OnProcessedListener {
+        public void onProcessed();
+    }
+    public void runCollectChapters(List<Chapter> chapters, Context context) throws RuntimeException{
+        try {
+
+            book = new BookBuilder(title);
+            if (author == null || author.isEmpty())
+                author = title;
+            var splitAuthor = author.split("[, ]");
+            if (splitAuthor.length < 1)
+                book.setAuthor("Undefined");
+            else if (splitAuthor.length < 2)
+                book.setAuthor(splitAuthor[0]);
+            else if (splitAuthor.length < 3)
+                book.setAuthor(splitAuthor[0], splitAuthor[1]);
+            else
+                book.setAuthor(splitAuthor[0], splitAuthor[splitAuthor.length - 1]);
+            int i = 0;
+
+            ArrayBlockingQueue<ContentFetcher.ParseResult> queue =
+                    new ArrayBlockingQueue<>(chapters.size());
+
+            for (Chapter chapter : chapters) {
+                i++;
+
+                ContentFetcher.ParseResult chapterPage;
+                try {
+                    chapterPage = contentFetcher.fetchContent(chapter.getSourceUrl());
+                } catch (IOException e) {
+                    throw new RuntimeException("failed to get chapter webpage " + chapter.getSourceUrl() + e);
+                }
+                mainPage.parser.removeUnusedElementsToReduceMemoryConsumption(chapterPage.document);
+                Element chapterContent = mainPage.parser.findContent(chapterPage.document);
+                mainPage.parser.removeUnwantedElementsFromContentElement(chapterContent);
+                mainPage.parser.addTitleToContent(chapterPage.document, chapterContent);
+                book.addChapter(chapter.getTitle(), toXHTML(chapterContent.html(), chapter.getTitle()));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String toXHTML(String html, String title) {
