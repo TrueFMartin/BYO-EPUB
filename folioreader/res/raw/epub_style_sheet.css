@@ -38,7 +38,7 @@ span.bolditalic {
 
 strong, span.bold {
   font-weight: bold;
-  font-family: serif;
+
 }
 
 a.ulink, a.xref, a.email {
@@ -59,7 +59,7 @@ sub {
 span.lineannotation {
   font-style: italic;
   color: red;
-  font-family: serif, "Free Serif";
+
 }
 
 span.underline { text-decoration: underline; }
@@ -107,14 +107,14 @@ span.gray50 {
 h1 {
   font-size: 1.5em;
   font-weight: bold;
-  font-family: "Free Sans Bold", sans-serif;
+
   margin-top: 20px !important;
 }
 
 h2 { 
   font-size: 1.3em;
   font-weight: bold;
-  font-family: "Free Sans Bold", sans-serif;
+
   color: #8e0012;
   margin: 15px 0 8px 0 !important;
 }
@@ -122,14 +122,14 @@ h2 {
 h3 {
   font-size: 1.1em;
   font-weight: bold;
-  font-family: "Free Sans Bold", sans-serif;
+
   margin: 10px 0 8px 0 !important;
 }
 
 h4 {
   font-size: bold;
   font-weight: 1em;
-  font-family: "Free Sans Bold", sans-serif;
+
   color: #555;
   margin: 9px 0 !important;
 }
@@ -173,7 +173,7 @@ figure figcaption {
   text-align: center;
   font-weight: normal;
   font-style: italic;
-  font-family: "Free Serif", serif;
+
   color: #000;
   padding: 5px !important;
   page-break-before: avoid;
@@ -200,7 +200,7 @@ div.sidebar {
 
 div.sidebar p.title {
   font: bold 1em;
-  font-family: "Free Sans Bold", sans-serif;
+
   text-transform:uppercase;
   letter-spacing: 1px;
   text-align: center;
@@ -241,7 +241,7 @@ div.sidebar div.figure {
 
 pre {
   white-space: pre-wrap;
-  font-family: "Ubuntu Mono", monospace;
+
   margin: 10px 0 10px 20px;
   font-size: 85%;
   display: block;
@@ -251,23 +251,23 @@ pre {
 }
 
 code {
-  font-family: "Ubuntu Mono", monospace;
+
 }
 
 code strong em, code em strong, pre em strong, pre strong em,
 strong code em code, em code strong code, span.bolditalic code { /* yes, all of these variations are needed */
   font-weight: bold;
   font-style: italic;
-  font-family: "Ubuntu Mono BoldItal", monospace;
+
 }
 
 code em, em code, pre em, em.replaceable {
-  font-family: "Ubuntu Mono Ital", monospace;
+
   font-style: italic;
 }
 
 code strong, strong code, pre strong, strong.userinput {
-  font-family: "Ubuntu Mono Bold", monospace;
+
   font-weight: bold;
 }
 
@@ -278,7 +278,7 @@ div.example {
 div.example p.title {
   font-style: italic;
   font-weight: normal;
-  font-family: "Free Serif", serif;
+
   margin: 10px 0 5px 0 !important;
 }
 
@@ -300,7 +300,7 @@ div.book div.titlepage h1.title {
 
 div.book div.titlepage div.author h3 {
   font-size: 1.6em;
-  font-family: "Free Sans Bold", sans-serif;
+
   text-align: center;
   color: #8e0012;
   margin: 10px 0 !important;
@@ -308,7 +308,7 @@ div.book div.titlepage div.author h3 {
 
 h2.subtitle {
   font: bold italic 1.1em;
-  font-family: "Free Sans Bold", sans-serif;
+
   text-align: center;
   color: #000;
   margin-top: 5px !important;
@@ -337,7 +337,7 @@ div.editor h4 {
 
 div.editor h3 {
   margin: 0;
-  font-family: serif;
+
   font-size: 1em;
   font-weight: normal
 }
@@ -345,7 +345,7 @@ div.editor h3 {
 div.dedication p { 
   text-align: center;
   font-style: italic;
-  font-family: "Free Serif", serif;
+
 }
 
 div.dedication div.titlepage h1.title {
@@ -380,7 +380,7 @@ blockquote, div.blockquote {
 
 blockquote p, div.blockquote p {
   font-style: italic;
-  font-family: "Free Serif", serif;
+
 }
 
 blockquote div.attribution {  
@@ -547,7 +547,7 @@ div.important {
 
 div.tip h3, aside.note h3, div.warning h3, div.caution h3, div.important h3 {
   font: bold 90%;
-  font-family: "Free Sans Bold", sans-serif;
+
   text-transform: uppercase;
   letter-spacing: 1px;
   text-align: center;
@@ -582,7 +582,7 @@ tr:nth-of-type(even) {
 }
 
 th {
-  font-family: "Free Sans Bold", sans-serif;
+
   color: #000;
   font-weight: bold;
 }
@@ -613,7 +613,7 @@ div.informaltable td, div.informaltable th {
 div.table p.title {
   font-weight: normal;
   font-style: italic;
-  font-family: "Free Serif", serif;
+
   margin: 20px 0 0 0 !important;
   text-align: center;
   padding: 0;
@@ -812,54 +812,12 @@ div.blockquote_sampler_toc {
   margin: 5px 5px 5px 10px !important;
 }
 
-/* fonts (keep at bottom); using Free Serif and Sans as a fallback for its rich set of glyphs */
 
-@font-face {
-  font-family: "Free Serif";
-  font-style: normal;
-  font-weight: normal;
-  src: url(../fonts/FreeSerif.otf);
-}
-
-@font-face {
-  font-family: "Free Sans Bold";
-  font-style: normal;
-  font-weight: bold;
-  src: url(../fonts/FreeSansBold.otf);
-}
-
-@font-face {
-  font-family: "Ubuntu Mono";
-  font-weight: normal;
-  font-style: normal;
-  src: url(../fonts/UbuntuMono-R.ttf);
-}
-
-@font-face {
-  font-family: "Ubuntu Mono Bold";
-  font-style: normal;
-  font-weight: bold;
-  src: url(../fonts/UbuntuMono-B.ttf);
-}
-
-@font-face {
-  font-family: "Ubuntu Mono BoldItal";
-  font-weight: bold;
-  font-style: italic;
-  src: url(../fonts/UbuntuMono-BI.ttf);
-}
-
-@font-face {
-  font-family: "Ubuntu Mono Ital";
-  font-weight: normal;
-  font-style: italic;
-  src: url(../fonts/UbuntuMono-RI.ttf);
-}
 
 /* keep this body statement last */
 
 body {
-  font-family: "Free Serif", serif;
+
 }
 
 

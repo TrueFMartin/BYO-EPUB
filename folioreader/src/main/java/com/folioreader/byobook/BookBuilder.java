@@ -81,7 +81,7 @@ public class BookBuilder {
         }
     }
 
-    public void setStyleSheet(InputStream resourceStream) {
-        book.addResource(getResource(resourceStream, "epub.css"));
+    public void addOtherResource(InputStream resourceStream, String href) {
+        book.addResource(getResource(resourceStream, href));
     }
 }

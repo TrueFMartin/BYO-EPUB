@@ -33,8 +33,22 @@ class MainBuilderManager(val url: String) {
 
      fun alterDocument(uri: Uri, applicationContext: Context) {
         try {
-            val resourceStream = applicationContext.resources.openRawResource(R.raw.epub_style_sheet)
-            builder.addStyleSheet(resourceStream)
+            val stream1 = applicationContext.resources.openRawResource(R.raw.epub_style_sheet)
+            builder.addStyleSheet(stream1, "epub.css")
+//            val stream2 = applicationContext.resources.openRawResource(R.raw.FreeSansBold)
+//            builder.addStyleSheet(stream2, "FreeSansBold.otf")
+//            val stream3 = applicationContext.resources.openRawResource(R.raw.FreeSerif)
+//            builder.addStyleSheet(stream3, "FreeSansBold.otf")
+//            val stream4 = applicationContext.resources.openRawResource(R.raw.UbuntuMonoB)
+//            builder.addStyleSheet(stream4, "FreeSansBold.otf")
+//            val stream5 = applicationContext.resources.openRawResource(R.raw.UbuntuMonoBI)
+//            builder.addStyleSheet(stream5, "FreeSansBold.otf")
+//            val stream6 = applicationContext.resources.openRawResource(R.raw.UbuntuMonoR)
+//            builder.addStyleSheet(stream6, "FreeSansBold.otf")
+//            val stream7 = applicationContext.resources.openRawResource(R.raw.UbuntuMonoRI)
+//            builder.addStyleSheet(stream7, "FreeSansBold.otf")
+
+
             val stream = FileOutputStream(applicationContext.contentResolver.openFileDescriptor(uri, "w")?.fileDescriptor)
             builder.build(stream)
         } catch (e: FileNotFoundException) {

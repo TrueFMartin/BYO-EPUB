@@ -91,8 +91,8 @@ public class MainBuilder{
         doc.head().appendChild(titleElem);
         titleElem.text(title);
     }
-    public void addStyleSheet(@NotNull InputStream resourceStream) {
-        book.setStyleSheet(resourceStream);
+    public void addStyleSheet(@NotNull InputStream resourceStream, String href) {
+        book.addOtherResource(resourceStream, href);
     }
     public void build(String path) {
         book.build(path);
