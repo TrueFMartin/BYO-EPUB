@@ -114,6 +114,9 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     private var topActivity: Boolean? = null
     private var taskImportance: Int = 0
 
+    private var isUriLocated: Boolean = false
+    private var mUriBookPath: Uri? = null
+
     companion object {
 
         @JvmField
@@ -283,12 +286,17 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
 
     private fun getIntentExtrasAndAssignFields() {
+        isUriLocated = intent.getBooleanExtra(FolioReader.EXTRA_IS_URI_LOCATED, false)
+        if (isUriLocated) {
+            mUriBookPath = intent.getParcelableExtra(FolioReader.EXTRA_URI_LOCATOR)
+        }
+
         mBookId = intent.getStringExtra(FolioReader.EXTRA_BOOK_ID)
         mEpubSourceType =
             intent.extras!!.getSerializable(FolioActivity.INTENT_EPUB_SOURCE_TYPE) as EpubSourceType
         if (mEpubSourceType == EpubSourceType.RAW) {
             mEpubRawId = intent.extras!!.getInt(FolioActivity.INTENT_EPUB_SOURCE_PATH)
-        } else {
+        } else if (!isUriLocated){
             mEpubFilePath = intent.extras!!
                 .getString(FolioActivity.INTENT_EPUB_SOURCE_PATH)
         }
@@ -460,15 +468,23 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     @Throws(Exception::class)
     private fun initBook() {
         Log.v(LOG_TAG, "-> initBook")
+        val path: String
+        if (isUriLocated) {
+           bookFileName = FileUtil.getEpubFilename(this, mUriBookPath)
+            path = FileUtil.saveEpubFileAndLoadLazyBook(
+                this, mUriBookPath, bookFileName
+            )
+        } else {
+            bookFileName = FileUtil.getEpubFilename(this, mEpubSourceType!!, mEpubFilePath, mEpubRawId)
+             path = FileUtil.saveEpubFileAndLoadLazyBook(
+                this,
+                mEpubSourceType,
+                mEpubFilePath,
+                mEpubRawId,
+                bookFileName
+            )
+        }
 
-        bookFileName = FileUtil.getEpubFilename(this, mEpubSourceType!!, mEpubFilePath, mEpubRawId)
-        val path = FileUtil.saveEpubFileAndLoadLazyBook(
-            this,
-            mEpubSourceType,
-            mEpubFilePath,
-            mEpubRawId,
-            bookFileName
-        )
         val extension: Publication.EXTENSION
         var extensionString: String? = null
         try {

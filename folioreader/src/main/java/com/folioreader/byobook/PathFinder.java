@@ -18,7 +18,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.UUID;
 
-public class FileUtils {
+public class PathFinder {
     public static String FALLBACK_COPY_FOLDER = "upload_part";
 
     private static String TAG = "FileUtils";
@@ -27,7 +27,7 @@ public class FileUtils {
 
     Context context;
 
-    public FileUtils(Context context) {
+    public PathFinder(Context context) {
         this.context = context;
     }
 

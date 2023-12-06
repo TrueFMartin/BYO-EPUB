@@ -21,13 +21,13 @@ class MainBuilderManager(val url: String) {
 
 
     fun build(path: Uri, applicationContext: Context) {
-        val s = FileUtils(applicationContext).getPath(path)
+        val s = PathFinder(applicationContext).getPath(path)
         builder.build(s)
     }
 
     fun buildDir(path: Uri, applicationContext: Context, fileName: String) {
 
-        val s = FileUtils(applicationContext).getPath(path)
+        val s = PathFinder(applicationContext).getPath(path)
         builder.build(s)
     }
 

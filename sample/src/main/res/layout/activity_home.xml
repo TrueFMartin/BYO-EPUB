@@ -23,12 +23,22 @@
         android:text="Open epub assets" />
 
     <Button
-        android:id="@+id/btn_build_new"
+        android:id="@+id/btn_internal_storage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/btn_assets"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="20dp"
         android:layout_marginRight="10dp"
-        android:text="Open epub assets" />
+        android:text="Open book from internal storage" />
+
+    <Button
+        android:id="@+id/btn_build_new"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btn_internal_storage"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="10dp"
+        android:text="Build Your Own Ebook" />
 </RelativeLayout>

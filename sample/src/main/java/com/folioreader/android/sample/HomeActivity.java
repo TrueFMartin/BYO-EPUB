@@ -15,13 +15,19 @@
  */
 package com.folioreader.android.sample;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.folioreader.Config;
@@ -90,6 +96,26 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
+        findViewById(R.id.btn_internal_storage).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                ReadLocator readLocator = getLastReadLocator();
+
+                Config config = AppUtil.getSavedConfig(getApplicationContext());
+                if (config == null)
+                    config = new Config();
+                config.setAllowedDirection(Config.AllowedDirection.VERTICAL_AND_HORIZONTAL);
+                config.setShowSearch(false);
+
+                folioReader.setReadLocator(readLocator);
+                folioReader.setConfig(config, true);
+                //FIXME after knowing the URI to build, build it
+//                Uri uri = new Uri.Builder().
+                openFile();
+            }
+        });
+
         findViewById(R.id.btn_build_new).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -98,6 +124,40 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
+    }
+
+    // Request code for selecting a PDF document.
+    private static final int PICK_EPUB_FILE = 4;
+
+    private void openFile(Uri pickerInitialUri) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/epub+zip");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        }
+
+        startActivityForResult(intent, PICK_EPUB_FILE);
+    }
+
+    private void openFile() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/epub+zip");
+        startActivityForResult(intent, PICK_EPUB_FILE);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+        super.onActivityResult(requestCode, resultCode, resultData);
+        if (requestCode == PICK_EPUB_FILE
+                && resultCode == Activity.RESULT_OK) {
+//            String path = new PathFinder(getApplicationContext()).getPath(resultData.getData());
+            folioReader.openBook(resultData.getData());
+        }
     }
 
     private ReadLocator getLastReadLocator() {

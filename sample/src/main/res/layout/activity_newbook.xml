@@ -13,29 +13,29 @@
         android:text="@string/string_enter_url"
     />
     <Button
-        android:id="@+id/btn_confirm_newbook"
+        android:id="@+id/btn_open_parser_settings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/et_enter_url"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:text="something" />
+        android:text="Open Parser Settings" />
 
     <Button
-        android:id="@+id/btn_cancel"
+        android:id="@+id/btn_custom_parser"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btn_confirm_newbook"
+        android:layout_below="@+id/btn_open_parser_settings"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="20dp"
         android:layout_marginRight="10dp"
-        android:text="something" />
+        android:text="Set Custom Parser" />
 
     <Button
         android:id="@+id/btn_submit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btn_cancel"
+        android:layout_below="@+id/btn_custom_parser"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="20dp"
         android:layout_marginRight="10dp"

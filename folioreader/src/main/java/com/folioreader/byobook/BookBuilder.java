@@ -7,12 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.regex.Pattern;
 
-import io.documentnode.epub4j.domain.Author;
-import io.documentnode.epub4j.domain.Book;
-import io.documentnode.epub4j.domain.Metadata;
-import io.documentnode.epub4j.domain.Resource;
-import io.documentnode.epub4j.epub.EpubWriter;
 
+import io.documentnode.epub4j.epub.*;
+import io.documentnode.epub4j.domain.Book;
 public class BookBuilder {
     private static byte[] getResource(String path ) {
         return path.getBytes();

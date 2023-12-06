@@ -3,6 +3,7 @@ package com.folioreader.util;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -22,6 +23,31 @@ import java.io.OutputStream;
 public class FileUtil {
     private static final String TAG = FileUtil.class.getSimpleName();
     private static final String FOLIO_READER_ROOT = "folioreader";
+
+    public static String saveEpubFileAndLoadLazyBook(final Context context,
+                                                     Uri uri,
+                                                     String epubFileName
+    ){
+        try {
+
+            boolean isFolderAvailable = isFolderAvailable(epubFileName, context);
+            String filePath = getFolioEpubFolderPath(epubFileName, context) + "/" + epubFileName + ".epub";
+
+            InputStream epubInputStream;
+            if (!isFolderAvailable) {
+                    epubInputStream = context.getContentResolver().openInputStream(uri);
+                    saveTempEpubFile(filePath, epubFileName, epubInputStream, context);
+            } else {
+                epubInputStream = context.getContentResolver().openInputStream(uri);
+                saveTempEpubFile(filePath, epubFileName, epubInputStream, context);
+            }
+            return filePath;
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage());
+        }
+
+        return null;
+    }
 
     public static String saveEpubFileAndLoadLazyBook(
             final Context context,
@@ -81,6 +107,18 @@ public class FileUtil {
     }
 
 
+    public static String getEpubFilename(
+            Context context,
+            Uri uri
+    ) {
+        String epubFilePath = uri.getLastPathSegment();
+        String[] temp = epubFilePath.split("/");
+        String epubFileName = temp[temp.length - 1];
+        int fileMaxIndex = epubFileName.length();
+        epubFileName = epubFileName.substring(0, fileMaxIndex - 5);
+
+        return epubFileName;
+    }
     public static String getEpubFilename(
             Context context,
             FolioActivity.EpubSourceType epubSourceType,

@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
@@ -38,6 +39,9 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
  */
 
 public class FolioReader {
+
+    public static final String EXTRA_URI_LOCATOR = "com.folioreader.extra.URI_LOCATOR";
+    public static final String EXTRA_IS_URI_LOCATED = "com.folioreader.extra.IS_URI_LOCATED";
 
     @SuppressLint("StaticFieldLeak")
     private static FolioReader singleton = null;
@@ -166,7 +170,11 @@ public class FolioReader {
         return singleton;
     }
 
-
+    public FolioReader openBook(Uri uri) {
+        Intent intent = getIntentFromURI(uri);
+        context.startActivity(intent);
+        return singleton;
+    }
     public FolioReader openBook(String deviceStoragePath, boolean isInternalStorage, String bookId) {
         Intent intent = getIntentFromUrl(deviceStoragePath, 0, isInternalStorage);
         intent.putExtra(EXTRA_BOOK_ID, bookId);
@@ -182,6 +190,14 @@ public class FolioReader {
         return singleton;
     }
 
+
+    private Intent getIntentFromURI(Uri uri){
+        var intent = getIntentFromUrl("", 0, true);
+        intent.putExtra(EXTRA_URI_LOCATOR, uri);
+
+        intent.putExtra(EXTRA_IS_URI_LOCATED, true);
+        return intent;
+    }
     private Intent getIntentFromUrl(String path, int rawId, boolean isInternalStorage) {
 
         Intent intent = new Intent(context, FolioActivity.class);
