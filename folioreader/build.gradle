@@ -85,8 +85,7 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:$versions.recyclerview"
     implementation "com.google.android.material:material:$versions.material"
     implementation fileTree(dir: '../libs', include: ['*.jar'])
-
-    implementation files('../libs/epub4j-core-4.2.1-sources.jar')
+    implementation("net.sf.kxml:kxml2:2.3.0")
     testImplementation 'junit:junit:4.12'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$versions.kotlinCoroutines"
 
