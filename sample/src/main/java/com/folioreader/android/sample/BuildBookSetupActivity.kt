@@ -34,9 +34,7 @@ class BuildBookSetupActivity: AppCompatActivity() {
 
     }
     private fun submitCallback() {
-        var url = etEnterURL.text.toString()
-        // FIXME FOR TESTING
-        url = "https://www.wanderinginn.com/table-of-contents"
+        val url = etEnterURL.text.toString()
         val i = Intent(
             applicationContext,
             ConfirmNewBookActivity::class.java
