@@ -2,7 +2,10 @@
 
 An extension of the FolioReader framework. This project adds the ability for a user to create their own e-books from a publicly available web novel. The user simply needs to provide the URL for a table of contents, and the parser will transform and combine each chapter from dirty HTML -> clean HTML -> clean XHTML -> a packaged '.epub' file. The user is then able to open the file from their local file storage and read it using the FolioReader framework. 
 
-This is still a work in progress and more parsers will need to be added. Each web novel hosting site has its own formatting, and individual parsers need to be created for each one. There are 10 parsers finished so far. 
+This is still a work in progress and more parsers will need to be added. Each web novel hosting site has its own formatting, and individual parsers need to be created for each one. There are 10 parsers finished so far.
+
+### Progress
+A running report on the current state of the application can be found here: [Report](https://github.com/TrueFMartin/BYO-EPUB/blob/master/BYO-EPUB_current-state.pdf)
 
 ![FolioReader logo](https://raw.githubusercontent.com/FolioReader/FolioReaderKit/assets/folioreader.png)
 
